@@ -299,19 +299,37 @@
       }
       /* The control buttons NEVER move (John's order,
          2026-10-20 — "Fix control buttons they all seemed to
-         move"): every button holds the exact seat it has in
-         the lobby for the whole round — Start game / End game
-         at the left edge, JUMP in the middle, the sound pair
-         on the right — and the bar's grid is never re-seated.
-         The old in-round seat swap (JUMP trading seats with
-         the game button) is gone, and the Reset / Pack’em
-         pair no longer leaves the document mid-round: it
-         stays in its seat and is only made invisible and
-         untappable for the round (startGame adds .away,
-         endGame drops it), so the bar keeps its exact shape
-         and the pile's floor — the bar's top edge — never
-         shifts under the pieces. */
-      .pack-stack.away { visibility: hidden; }
+         move"), and NO button is ever greyed out (John's
+         ruling, 2026-10-20: "There should be no greyed out
+         buttons — if they're not [usable] they should not
+         be on the screen"): every button that stays on
+         screen holds its exact lobby seat AND its exact
+         lobby size for the whole round — Start game / End
+         game at the left edge, JUMP in the middle, the
+         sound pair on the right — and the bar's grid is
+         never re-seated, re-wrapped, or resized. Three
+         locks hold that line:
+           1. The buttons whose label flips (Start game /
+              End game, Music: on / off, Bouncer: on / off)
+              are pinned by the script to the WIDER label's
+              width (see pinFlipWidths), so a label flip
+              can never change a button's box.
+           2. Mid-round, Reset and Pack’em are not dimmed,
+              not greyed, not merely hidden — they are OFF
+              the screen entirely (display: none below),
+              because a round is exactly 15 pieces: nothing
+              on the round screen may add a piece or settle
+              the pile back to the lobby crowd.
+           3. Their grid cell does not collapse behind
+              them: startGame freezes the pair's seat at
+              its exact lobby size (inline width / height)
+              in the same breath that it switches the
+              buttons off, and endGame unfreezes it as the
+              pair returns — so the bar keeps its exact
+              shape in every state and the pile's floor —
+              the bar's top edge — never shifts under the
+              pieces. */
+      .pack-stack.away button { display: none; }
       .gamehud {
         position: fixed;
         left: 50%;
@@ -816,6 +834,43 @@
         var packStack = document.getElementById("packStack");
         var soundStack = document.getElementById("soundStack");
         var bouncerBtn = document.getElementById("bouncerBtn");
+
+        // ---------- Button boxes never change size ----------
+        // The buttons whose label flips between states —
+        // Start game / End game, Music: on / Music: off,
+        // Bouncer: on / Bouncer: off — are content-sized, so
+        // a flip would narrow or widen the button mid-round
+        // and shove its neighbours (John's ruling, 2026-10-20:
+        // no button moves, resizes, or re-wraps — ever). Pin
+        // each one to the WIDER of its two labels, measured
+        // off the real rendered button on this device, so
+        // both labels render in one identical box. Re-measured
+        // on load and on resize, because the phone tiers step
+        // the buttons' type and padding down and the honest
+        // width follows the tier.
+        function pinFlipWidths() {
+          var flips = [
+            [gameBtn, ["Start game", "End game"]],
+            [musicBtn, ["Music: on", "Music: off"]],
+            [bouncerBtn, ["Bouncer: on", "Bouncer: off"]]
+          ];
+          for (var fi = 0; fi < flips.length; fi++) {
+            var btn = flips[fi][0];
+            var labels = flips[fi][1];
+            var current = btn.textContent;
+            var widest = 0;
+            btn.style.width = "";
+            for (var li = 0; li < labels.length; li++) {
+              btn.textContent = labels[li];
+              if (btn.offsetWidth > widest) widest = btn.offsetWidth;
+            }
+            btn.textContent = current;
+            if (widest > 0) btn.style.width = widest + "px";
+          }
+        }
+        pinFlipWidths();
+        window.addEventListener("load", pinFlipWidths);
+        window.addEventListener("resize", pinFlipWidths);
 
         // ================================================================
         // PROPERTY SKIN — the per-property edition block.
@@ -4747,17 +4802,23 @@
           roundDeck = null; // dealt out — later spawns are Pack’em again
           roundKinds = null;
           gameOn = true;
-          // No Pack’em and no Reset in the game — but the pair
-          // no longer leaves the document (that yanked the bar
-          // into a new shape and moved every other button when
-          // a round started; John's order, 2026-10-20: the
-          // control buttons must not move). The pair stays in
-          // its seat for the whole round, only invisible and
-          // untappable (.away), so nothing on the round screen
+          // No Pack’em and no Reset in the game — and no
+          // greyed-out buttons, ever (John's ruling,
+          // 2026-10-20: a button that can't be used is not
+          // on the screen). The pair comes OFF the screen
+          // for the whole round (.away switches both buttons
+          // to display: none), so nothing on the round screen
           // can add a piece (a round is exactly 15) or settle
-          // the pile back to the lobby crowd, and the bar —
-          // and the pile's floor on its top edge — never
-          // shifts. endGame drops .away for Pack’em.
+          // the pile back to the lobby crowd. Their seat does
+          // not collapse behind them: it is frozen at its
+          // exact lobby size in this same breath, so the bar
+          // keeps its exact shape — no re-wrap, no resize —
+          // and the pile's floor on the bar's top edge never
+          // shifts. endGame unfreezes the seat as the pair
+          // returns.
+          var seatRect = packStack.getBoundingClientRect();
+          packStack.style.width = seatRect.width + "px";
+          packStack.style.height = seatRect.height + "px";
           packStack.classList.add("away");
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
@@ -4791,11 +4852,15 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // The round is over: Pack’em gets its pile pair back —
-          // it never left its seat, so this only makes it
-          // visible and tappable again, Reset and Pack’em side
-          // by side, both working exactly as they always have.
+          // The round is over: Pack’em gets its pile pair back
+          // on screen — Reset and Pack’em side by side, both
+          // working exactly as they always have — and the
+          // seat's freeze comes off in the same breath, back
+          // to the pair's natural size (the same size it was
+          // frozen at: the pair's labels never change).
           packStack.classList.remove("away");
+          packStack.style.width = "";
+          packStack.style.height = "";
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
@@ -4907,18 +4972,18 @@
 
         addBtn.addEventListener("click", function () {
           // Belt and braces beside the round-time removal above:
-          // even a programmatic click on the detached button can
-          // never add a piece mid-round. In Pack’em it adds 3,
-          // exactly as it always has.
+          // even a programmatic click on the off-screen button
+          // can never add a piece mid-round. In Pack’em it adds
+          // 3, exactly as it always has.
           if (gameOn) return;
           spawn(3);
         });
         shakeBtn.addEventListener("click", shake);
         resetBtn.addEventListener("click", function () {
           // Belt and braces beside the round-time removal above:
-          // even a programmatic click on the detached button can
-          // never reset the pile mid-round. In Pack’em it settles
-          // the pile back to the full crowd.
+          // even a programmatic click on the off-screen button
+          // can never reset the pile mid-round. In Pack’em it
+          // settles the pile back to the full crowd.
           if (gameOn) return;
           reset();
         });

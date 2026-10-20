@@ -281,12 +281,21 @@
          toggle word ("off") on either switch. */
       #gameBtn { min-width: 7.6em; }
       .sound-stack button { min-width: 9.3em; }
-      /* A button parked for the round (Reset and Pack’em
-         while a game runs — see startGame) keeps its seat
-         and its full size: it only dims, and it cannot be
-         pressed. */
+      /* A locked control dims in place (the rating stars,
+         once tapped). Reset and Pack’em never dim: for a
+         round they leave the screen entirely — see
+         .pack-stack.away below and startGame. */
       button:disabled { opacity: 0.45; cursor: default; }
       button:disabled:active { transform: none; }
+      /* Reset and Pack’em OFF the screen for a round (John’s
+         rule, 2026-10-20: “no greyed-out buttons — if a button
+         is not usable, it should not be on the screen”): while
+         a round runs the pack stack is invisible and
+         untappable, and its seat stays in the layout, empty,
+         so every button that remains keeps its exact lobby
+         size and seat and the bar never re-wraps. startGame
+         adds .away; endGame drops it. */
+      .pack-stack.away { visibility: hidden; }
       /* The JUMP button, enlarged: roughly one-and-a-half times a
          plain button's footprint — taller and wider, label scaled
          up to match — so it is an easier, more confident tap
@@ -686,9 +695,10 @@
            Music / Bouncer — two button-rows tall (~128px) with
            nothing left over. Grid seats follow document order,
            and the seats never change: in a round every button
-           keeps its grid seat (Reset and Pack’em stay in
-           theirs, disabled and dimmed), so the grid the round
-           runs on is the grid the lobby showed. */
+           keeps its grid seat (Reset and Pack’em leave the
+           screen for the round — their grid seats sit empty),
+           so the grid the round runs on is the grid the lobby
+           showed. */
         .toolbar {
           display: grid;
           grid-template-columns: repeat(3, auto);
@@ -4839,21 +4849,20 @@
           gameOn = true;
           // Fixed seats (John's ruling, 2026-10-20 — "fix
           // control buttons they all seemed to move"): NO button
-          // leaves the bar, swaps seats, or changes size for a
-          // round — the bar the round runs under is pixel-for-
-          // pixel the lobby bar, so nothing on screen jumps when
-          // a round starts or ends. (The old behaviour — Reset
-          // and Pack’em pulled out of the document, JUMP and the
-          // game button trading seats — rearranged the whole
-          // bar on every Start and every End.) Reset and Pack’em
-          // stay in their stack, disabled for the round: visible
-          // in their seats, dimmed, and unpressable, so nothing
-          // on the round screen can add a piece (a round is
-          // exactly 15) or settle the pile back to the lobby
-          // crowd — and their click handlers refuse mid-round
-          // besides. endGame re-enables them in place.
-          addBtn.disabled = true;
-          resetBtn.disabled = true;
+          // swaps seats or changes size for a round — the bar
+          // the round runs under is pixel-for-pixel the lobby
+          // bar, so nothing on screen jumps when a round starts
+          // or ends. And no greyed-out buttons (John's rule,
+          // 2026-10-20: "if a button is not usable, it should
+          // not be on the screen"): Reset and Pack’em leave
+          // the screen entirely for the round — their stack
+          // goes invisible and untappable (.away), its seat
+          // sitting empty in the layout — so nothing on the
+          // round screen can add a piece (a round is exactly
+          // 15) or settle the pile back to the lobby crowd,
+          // and their click handlers refuse mid-round besides.
+          // endGame brings them back in the same seats.
+          packStack.classList.add("away");
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
@@ -4883,12 +4892,11 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // Fixed seats: no button moved for the round, so none
-          // moves back — Free Play simply gets its Reset and
-          // Pack’em buttons working again, in the same seats
-          // they held all round.
-          addBtn.disabled = false;
-          resetBtn.disabled = false;
+          // Fixed seats: no button moved for the round and
+          // none moves back — endGame simply brings Reset and
+          // Pack’em back onto the screen, in the same seats
+          // that sat empty all round.
+          packStack.classList.remove("away");
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
