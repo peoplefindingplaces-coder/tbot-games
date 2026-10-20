@@ -236,10 +236,8 @@
          a tall card eating the bottom of the screen. In the
          Garden-style bar they lay their buttons straight into
          the bar's row instead: the wrappers are display:contents,
-         so they keep their place in the document — the script
-         still seats Reset and Pack'em back into their group when
-         a round ends, and takes them out of it when one starts —
-         but they add no box of their own to the layout. Group
+         so the buttons keep their place in the document but the
+         wrappers add no box of their own to the layout. Group
          order in the row is the document order: Reset beside
          Pack'em, Music beside Bouncer. */
       .sound-stack,
@@ -303,6 +301,26 @@
       #resetBtn {
         width: 91px;
       }
+      /* Fixed seats (John's order, 2026-10-20 — "fix control
+         buttons, they all seemed to move"): every bar button
+         whose label changes gets ONE fixed width, sized for
+         its longest label, so a label change can never resize
+         the button and shove its neighbours along the
+         space-between row. "Start game" / "End game",
+         "Music: on" / "Music: off", "Bouncer: on" /
+         "Bouncer: off" — each pair now stands at one width in
+         both states. Reset (91px above) and Pack'em (112px
+         above) already stand at fixed widths, and Jump's label
+         never changes. The widths are sized for the larger
+         desktop type, so they hold at phone size too. A
+         switched-off button (Reset and Pack'em sit a round
+         out — see startGame) dims in its seat instead of
+         leaving the bar. */
+      #gameBtn { width: 112px; }
+      #musicBtn { width: 108px; }
+      #bouncerBtn { width: 122px; }
+      button:disabled { opacity: 0.45; cursor: default; }
+      button:disabled:active { transform: none; }
       .gamehud {
         position: fixed;
         left: 50%;
@@ -1408,7 +1426,7 @@
         })();
 
         var W = 0, H = 0, DPR = 1;
-        var floorInset = 0; // physics floor sits just above the toolbar so the pile never hides behind it
+        var floorInset = 0; // physics floor: the bar's top edge — the pile sits ON TOP of the bar (set in resize)
         var toolbarEl = document.querySelector(".toolbar");
 
         function floorY() { return H - floorInset; }
@@ -2202,16 +2220,22 @@
           canvas.style.width = W + "px";
           canvas.style.height = H + "px";
           ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-          // The floor hugs the toolbar (the frog move, John's
-          // ruling 2026-10-19, deepened the same day at his word
-          // — "lower still"): the pile's bottoms rest essentially
-          // ON the field's bottom edge — the floor line sits at
-          // the bar's own height + 6px from the screen bottom,
-          // the minimum the bar allows (its 14px bottom offset
-          // counted in), so the crowd hugs the very bottom of
-          // the screen, wholly clear of the bar, in the lobby
-          // pile and in live rounds alike.
-          floorInset = toolbarEl ? toolbarEl.offsetHeight + 6 : 0;
+          // The pile sits ON TOP of the bar (John's order,
+          // 2026-10-20 — "the items should sit on top of the
+          // bar"): the floor line is the bar's own top edge,
+          // measured off the bar as it actually stands — its
+          // height AND its 14px float above the screen bottom
+          // both counted in — with the pile's bottoms tucked
+          // 2px into that edge so they read as resting on the
+          // bar, never sunk behind it and never floating above
+          // it. (The old line — bar height + 6, with the bar's
+          // float uncounted — put the floor 8px BELOW the bar's
+          // top edge, so the resting crowd sank into the bar's
+          // band instead of sitting on it.) The bar now stands
+          // at one height in the lobby and in a round alike —
+          // no button ever leaves it — so the floor holds still
+          // across Start and End too.
+          floorInset = toolbarEl ? Math.max(0, H - toolbarEl.getBoundingClientRect().top - 2) : 0;
           // The hole, a little bigger (John's ruling, 2026-10-19):
           // every term of the sizing is the old one × 1.15, so the
           // ring the player sees and every radius derived from
@@ -4630,24 +4654,20 @@
           roundDeck = null; // dealt out — later spawns are free play again
           roundKinds = null;
           gameOn = true;
-          // No + Item and no Reset in the game. Both buttons leave
-          // the toolbar for the whole round — not hidden, GONE from
-          // the document — so while a round is running nothing on
-          // the round screen can add a piece (a round is exactly
-          // 15) or settle the pile back to the lobby crowd. endGame
-          // puts both buttons back, in their exact old spots, for
-          // Free Play.
-          if (addBtn.parentNode) addBtn.parentNode.removeChild(addBtn);
-          if (resetBtn.parentNode) resetBtn.parentNode.removeChild(resetBtn);
-          // The in-round seat switch (the same one the other
-          // games carry): while a round runs, JUMP takes the LEFT
-          // seat — End game's old spot, at its full enlarged
-          // size — and End game moves to dead-centre, in JUMP's
-          // old seat. The sound stack never moves. Only the seats
-          // change; every button keeps its size, styling and
-          // behavior. endGame trades them back, so the lobby
-          // toolbar is exactly as it was.
-          toolbarEl.insertBefore(shakeBtn, gameBtn);
+          // No + Item and no Reset in the game — but no button
+          // ever leaves its seat (John's order, 2026-10-20:
+          // "fix control buttons, they all seemed to move").
+          // Reset and Pack'em used to be pulled out of the
+          // document for the whole round and JUMP traded seats
+          // with the game button, so the whole row reshuffled
+          // at Start and again at End. Now both buttons simply
+          // switch OFF in place — dimmed and untappable for the
+          // round, so nothing on the round screen can add a
+          // piece (a round is exactly 15) or settle the pile
+          // back to the lobby crowd — and endGame switches them
+          // back on in the very seats they never left.
+          resetBtn.disabled = true;
+          addBtn.disabled = true;
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
@@ -4677,16 +4697,11 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // The round is over: the seat switch unwinds first —
-          // JUMP and the game button (about to read "Start game"
-          // again) trade back to their lobby seats — then Free
-          // Play gets its Reset button back (the first seat of
-          // its group), then its + Item button, in its exact old
-          // spot (right beside Reset in the same group), both
-          // working exactly as they always have.
-          toolbarEl.insertBefore(gameBtn, shakeBtn);
-          if (!resetBtn.parentNode) packStack.appendChild(resetBtn);
-          if (!addBtn.parentNode) packStack.appendChild(addBtn);
+          // The round is over: Reset and Pack'em switch back on
+          // in the seats they never left — no button moves at
+          // Start, at End, or anywhere between (see startGame).
+          resetBtn.disabled = false;
+          addBtn.disabled = false;
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
