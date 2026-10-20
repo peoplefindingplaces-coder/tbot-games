@@ -241,12 +241,22 @@
          pile buttons read as one little stack in one column,
          with clear space between the two (12px, against the
          sound stack's tighter 6px), so they read as two
-         separate stacked buttons, not one tight block. */
+         separate stacked buttons, not one tight block. The
+         stack's size is PINNED to its lobby size: during a
+         round its two buttons are off the screen entirely
+         (hidden — see startGame and the no-greyed-buttons
+         ruling there), and the empty stack still holds its
+         width and height, so the bar keeps its exact shape,
+         the buttons that stay keep their exact seats, and
+         the bar's top edge — the pile's floor — never moves
+         between the lobby and a round. */
       .pack-stack {
         display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
+        min-width: 143px;
+        min-height: 105px;
       }
       button {
         appearance: none;
@@ -281,21 +291,20 @@
          toggle word ("off") on either switch. */
       #gameBtn { min-width: 7.6em; }
       .sound-stack button { min-width: 9.3em; }
-      /* A locked control dims in place (the rating stars,
-         once tapped). Reset and Pack’em never dim: for a
-         round they leave the screen entirely — see
-         .pack-stack.away below and startGame. */
+      /* No greyed-out buttons (John's ruling, 2026-10-20):
+         a button that cannot be used in a state is not on
+         the screen in that state at all. Reset and Pack’em
+         are hidden outright for the whole round — this rule
+         makes the hiding absolute, so no bar layout mode
+         (the desktop stacks, the phone grid) can keep a
+         removed button on screen. Nothing in the toolbar is
+         ever shown disabled; the :disabled rules below now
+         serve only the end card's star row, whose dimming
+         is the stars' own unfilled look, not a parked
+         control. */
+      #resetBtn[hidden], #addBtn[hidden] { display: none; }
       button:disabled { opacity: 0.45; cursor: default; }
       button:disabled:active { transform: none; }
-      /* Reset and Pack’em OFF the screen for a round (John’s
-         rule, 2026-10-20: “no greyed-out buttons — if a button
-         is not usable, it should not be on the screen”): while
-         a round runs the pack stack is invisible and
-         untappable, and its seat stays in the layout, empty,
-         so every button that remains keeps its exact lobby
-         size and seat and the bar never re-wraps. startGame
-         adds .away; endGame drops it. */
-      .pack-stack.away { visibility: hidden; }
       /* The JUMP button, enlarged: roughly one-and-a-half times a
          plain button's footprint — taller and wider, label scaled
          up to match — so it is an easier, more confident tap
@@ -668,44 +677,61 @@
           min-height: 52px;
         }
         #resetBtn { width: 81px; }
-        /* The fixed seats hold at phone width too, sized to
-           the phone grid: the game button keeps the width of
-           its wider label. Of the sound toggles, Music needs
-           no pin here — Jump governs their shared grid column
-           in both of Music's states, so Music's box can never
-           widen the column. Bouncer's column-mate is the
-           narrow Reset, so Bouncer carries the pin itself:
-           the width of its wider "off" label, with slimmer
-           side padding so the pinned box still fits the bar
-           (the shared 9.3em stack width above is a desktop
-           measure — at phone width it pushed Bouncer out of
-           the bar's right edge). */
+        /* The label-flip pins hold at phone width too. In the
+           fixed grid below the tracks do the real pinning —
+           no label can widen a track — and these min-widths
+           are the belt-and-braces under them: the game button
+           keeps the width of its wider label, Music needs no
+           pin (its box is its track, in both of its states),
+           and Bouncer keeps a floor under its own box at the
+           width of its wider "off" label, with slimmer side
+           padding so the box still fits the bar (the shared
+           9.3em stack width above is a desktop measure — at
+           phone width it pushed Bouncer out of the bar's
+           right edge). */
         #gameBtn { min-width: 7.9em; }
         #musicBtn { min-width: 0; }
         #bouncerBtn { min-width: 9em; padding-left: 9px; padding-right: 9px; }
         /* The free-game bar on a phone (John's word, 2026-10-20
            — "the bottom is big in the free game part… like the
-           TBOT Garden"): the old flex bar wrapped wherever it
-           fell and stood ~200px tall, a tall panel with dead
-           space under the buttons eating the room. Now, like
-           the Garden's phone bar, it is a planned grid across
-           the full-width bar: the two stacks dissolve
-           (display: contents) and the six buttons seat three
-           over three — Start / Jump / Reset over Pack’em /
-           Music / Bouncer — two button-rows tall (~128px) with
-           nothing left over. Grid seats follow document order,
-           and the seats never change: in a round every button
-           keeps its grid seat (Reset and Pack’em leave the
-           screen for the round — their grid seats sit empty),
-           so the grid the round runs on is the grid the lobby
-           showed. */
+           TBOT Garden"): like the Garden's phone bar, it is a
+           planned grid across the full-width bar — the two
+           stacks dissolve (display: contents) and the six
+           buttons seat three over three: Start / Jump / Reset
+           over Pack’em / Music / Bouncer, two button-rows tall
+           (~128px) with nothing left over.
+           The grid is FIXED (John's no-greyed-buttons ruling,
+           2026-10-20): every button is pinned to its own cell
+           by name, and the column and row tracks are fixed
+           sizes — never content-sized. During a round, Reset
+           and Pack’em are off the screen entirely (hidden, not
+           dimmed): their cells sit EMPTY, and because no
+           track is measured off any button, the four buttons
+           that stay — End game, Jump, Music, Bouncer — keep
+           the exact boxes they had in the lobby, in the round,
+           and behind the end card. Label flips (Start/End,
+           Music on/off, Bouncer on/off) cannot resize
+           anything either: the words change inside boxes that
+           never do. Track widths are the lobby's own column
+           widths — the game button's pinned width and
+           Pack’em's full-size footprint in column 1, Jump's
+           footprint in column 2, the Bouncer toggle's pinned
+           width in column 3 — and each row is the tall
+           buttons' 52px phone height. */
         .toolbar {
           display: grid;
-          grid-template-columns: repeat(3, auto);
+          grid-template-columns: 117px 102px 122px;
+          grid-template-rows: 52px 52px;
           justify-content: space-between;
           row-gap: 8px;
         }
         .pack-stack, .sound-stack { display: contents; }
+        #gameBtn { grid-row: 1; grid-column: 1; }
+        #shakeBtn { grid-row: 1; grid-column: 2; }
+        #resetBtn { grid-row: 1; grid-column: 3; }
+        #addBtn { grid-row: 2; grid-column: 1; }
+        #musicBtn { grid-row: 2; grid-column: 2; }
+        #bouncerBtn { grid-row: 2; grid-column: 3; }
         .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
@@ -4847,22 +4873,28 @@
           roundDeck = null; // dealt out — later spawns are free play again
           roundKinds = null;
           gameOn = true;
-          // Fixed seats (John's ruling, 2026-10-20 — "fix
-          // control buttons they all seemed to move"): NO button
-          // swaps seats or changes size for a round — the bar
-          // the round runs under is pixel-for-pixel the lobby
-          // bar, so nothing on screen jumps when a round starts
-          // or ends. And no greyed-out buttons (John's rule,
-          // 2026-10-20: "if a button is not usable, it should
-          // not be on the screen"): Reset and Pack’em leave
-          // the screen entirely for the round — their stack
-          // goes invisible and untappable (.away), its seat
-          // sitting empty in the layout — so nothing on the
-          // round screen can add a piece (a round is exactly
-          // 15) or settle the pile back to the lobby crowd,
-          // and their click handlers refuse mid-round besides.
-          // endGame brings them back in the same seats.
-          packStack.classList.add("away");
+          // No greyed-out buttons (John's ruling, 2026-10-20 —
+          // "there should be no greyed out those buttons if
+          // they're not [usable], they should not be on the
+          // screen"): a button that cannot be used in a state
+          // is NOT on the screen in that state. So Reset and
+          // Pack’em do not dim for the round — they LEAVE it:
+          // hidden outright, their seats sitting empty (the
+          // phone grid's fixed tracks and the desktop stack's
+          // pinned size hold the bar's shape without them; see
+          // the toolbar CSS). Nothing on the round screen can
+          // add a piece (a round is exactly 15) or settle the
+          // pile back to the lobby crowd, because the buttons
+          // that do those things are simply not there — and
+          // their click handlers refuse mid-round besides.
+          // endGame brings them back in place. Every button
+          // that stays — End game, Jump, Music, Bouncer —
+          // keeps its exact lobby seat and size: the game
+          // button's box is pinned to its wider label, the
+          // sound toggles carry fixed widths, and the bar
+          // itself never re-wraps or re-flows between states.
+          addBtn.hidden = true;
+          resetBtn.hidden = true;
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
@@ -4892,11 +4924,13 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // Fixed seats: no button moved for the round and
-          // none moves back — endGame simply brings Reset and
-          // Pack’em back onto the screen, in the same seats
-          // that sat empty all round.
-          packStack.classList.remove("away");
+          // No greyed-out buttons: Reset and Pack’em were off
+          // the screen for the whole round, so Free Play
+          // simply gets them back — restored to the same
+          // seats they held in the lobby, at the same sizes,
+          // because the bar never changed shape without them.
+          addBtn.hidden = false;
+          resetBtn.hidden = false;
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
@@ -5009,7 +5043,7 @@
         });
 
         addBtn.addEventListener("click", function () {
-          // Belt and braces beside the round-time disabling
+          // Belt and braces beside the round-time removal
           // above: even a programmatic click can never add a
           // piece mid-round. In Free Play it adds 3, exactly
           // as it always has.
@@ -5018,7 +5052,7 @@
         });
         shakeBtn.addEventListener("click", shake);
         resetBtn.addEventListener("click", function () {
-          // Belt and braces beside the round-time disabling
+          // Belt and braces beside the round-time removal
           // above: even a programmatic click can never reset
           // the pile mid-round. In Free Play it settles the
           // pile back to the full crowd.
