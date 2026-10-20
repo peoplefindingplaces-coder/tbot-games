@@ -207,9 +207,10 @@
          part — I want it to be like the TBOT Garden"): a
          defined-width grid bar centred on the screen, the
          controls seated in ONE row — Start game at the left
-         edge, JUMP in the middle, the Reset / Pack’em pair and
-         the Music / Bouncer pair as short horizontal groups
-         toward the right — instead of the old content-width
+         edge, JUMP in the middle, the Reset / Pack’em pair as
+         a short horizontal group and the Music / Bouncer pair
+         stacked one over the other toward the right — instead
+         of the old content-width
          flex panel, whose two vertical stacks wrapped into a
          tall block that ate the bottom of the room on a phone.
          The seats are grid columns on the bar's four children;
@@ -240,13 +241,15 @@
       #shakeBtn { grid-column: 2; }
       .pack-stack { grid-column: 3; }
       .sound-stack { grid-column: 4; justify-self: end; }
-      /* The sound pair: Music and the Bouncer toggle side by
-         side in one short row at the bar's right end — the
-         game's two sound switches read as one little group,
-         the way Garden seats its sound control. */
+      /* The sound pair: Music stacked directly OVER the
+         Bouncer toggle in one short column at the bar's
+         right end (John's order, 2026-10-20: "the music
+         should be over the bouncer — they should be over
+         each other") — the game's two sound switches read
+         as one little group, one atop the other. */
       .sound-stack {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         gap: 8px;
       }
@@ -649,11 +652,11 @@
          one row, so the seats fold into TBOT Garden's compact
          two-row arrangement — Start game top-left with the
          Reset / Pack’em pair top-right, JUMP under Start game
-         with the sound pair beside it on the same row, kept
-         side by side (the pair never stacks vertically in
-         its corner; on the narrowest phones its two buttons
-         trim a touch so the pair still fits — see the 480px
-         block below). The middle track is slack, so each
+         with the sound pair beside it on the same row, Music
+         stacked over Bouncer in its corner exactly as on the
+         wide bar (on the narrowest phones its two buttons
+         trim a touch so the stack stays compact — see the
+         480px block below). The middle track is slack, so each
          group hugs its own edge exactly as on the wide bar.
          The fold is the same in a round as out of one — no
          button changes seats when a round starts or ends
@@ -668,8 +671,11 @@
           grid-column: 3;
           grid-row: 2;
           justify-self: end;
-          flex-wrap: nowrap;
         }
+        /* The stacked sound pair makes this fold's second
+           row taller than the old side-by-side pair did, so
+           the HUD chips lift to clear the bar's top edge. */
+        .gamehud { bottom: calc(176px + env(safe-area-inset-bottom)); }
       }
       @media (max-width: 480px) {
         button { padding: 11px 13px; font-size: 13.5px; }
@@ -685,8 +691,8 @@
           min-height: 52px;
         }
         /* The sound pair trims a touch at phone width so
-           Music and Bouncer still sit side by side in their
-           row on the narrowest phones instead of stacking. */
+           the stacked Music-over-Bouncer column stays
+           compact in its corner on the narrowest phones. */
         .sound-stack { gap: 6px; }
         .sound-stack button { font-size: 13px; padding: 10px 12px; }
         .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
