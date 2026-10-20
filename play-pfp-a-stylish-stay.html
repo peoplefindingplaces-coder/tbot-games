@@ -207,20 +207,29 @@
          2026-10-20: "The bottom is big in the free game part...
          I want it to be like the TBOT Garden"): one slim bar
          spanning the screen's width (capped at the Garden's
-         780px), its controls spread across a single row —
-         never the tall content-width card the stacked groups
-         used to make of it. On a narrow phone the row wraps
-         to two, the Garden's own narrow answer. */
+         780px) — never the tall content-width card the stacked
+         groups used to make of it.
+         The bar is a FIXED GRID (John's ruling, 2026-10-20:
+         the buttons kept moving, resizing and re-wrapping on
+         his phone, and greyed-out buttons are banned): three
+         equal columns by two fixed-height rows, one named cell
+         per button, and every button fills its cell — so a
+         button's size and seat come from the grid alone, never
+         from its label, and nothing can re-flow when a label
+         flips (Start game/End game, Music: on/off, Bouncer:
+         on/off) or when a button leaves the screen. During a
+         round Reset and Pack'em are NOT greyed out — they are
+         off the screen entirely (visibility:hidden, see
+         .toolbar.in-round below) and their cells stand empty. */
       .toolbar {
         position: fixed;
         left: 50%;
         bottom: calc(14px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: 56px 56px;
         gap: 8px;
-        flex-wrap: wrap;
-        justify-content: space-between;
         width: min(780px, calc(100vw - 20px));
         padding: 8px;
         border-radius: 18px;
@@ -229,6 +238,30 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+      }
+      /* Every bar button fills its grid cell exactly — width
+         and height are the cell's, in the lobby, in a round,
+         and on the end card alike. */
+      .toolbar button {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+      }
+      /* The fixed seats: row 1 — game, Jump, Reset; row 2 —
+         Pack'em, Music, Bouncer. These never change. */
+      #gameBtn { grid-column: 1; grid-row: 1; }
+      #shakeBtn { grid-column: 2; grid-row: 1; }
+      #resetBtn { grid-column: 3; grid-row: 1; }
+      #addBtn { grid-column: 1; grid-row: 2; }
+      #musicBtn { grid-column: 2; grid-row: 2; }
+      #bouncerBtn { grid-column: 3; grid-row: 2; }
+      /* Mid-round, Reset and Pack'em are off the screen — not
+         dimmed, not greyed (John's ruling) — while their cells
+         stay in the grid, empty, so the four buttons that
+         remain keep their exact lobby boxes. */
+      .toolbar.in-round #resetBtn,
+      .toolbar.in-round #addBtn {
+        visibility: hidden;
       }
       /* The two button groups — Reset with Pack'em, Music with
          the Bouncer toggle — used to sit in the bar as vertical
@@ -267,64 +300,45 @@
       button.primary.on {
         background: #1d9e50;
       }
-      /* The JUMP button, enlarged: roughly one-and-a-half times a
-         plain button's footprint — taller and wider, label scaled
-         up to match — so it is an easier, more confident tap
-         target mid-round on a phone. */
+      /* The JUMP button, enlarged type: its label is scaled up
+         to match its full-height grid cell — an easier, more
+         confident tap target mid-round on a phone. The cell
+         (row 1, column 2) fixes the footprint; only the type
+         is set here. */
       #shakeBtn {
         font-size: 22px;
         font-weight: 800;
         letter-spacing: 0.01em;
-        padding: 17px 26px;
+        padding: 17px 10px;
         border-radius: 16px;
-        min-width: 106px;
-        min-height: 56px;
       }
-      /* The toolbar Pack'em button, enlarged to the same full
-         size as the enlarged JUMP button above — a bigger,
-         easier tap target in the lobby / free-mode toolbar.
-         It keeps its seat beside Reset in their group (Reset
-         keeps its own plain size); the winner card's Pack'em
-         is a different button and keeps its card size. */
+      /* The toolbar Pack'em button wears the same enlarged
+         type as Jump; its footprint is its grid cell (row 2,
+         column 1). The winner card's Pack'em is a different
+         button and keeps its card size. */
       #addBtn {
         font-size: 22px;
         font-weight: 800;
         letter-spacing: 0.01em;
         padding: 17px 8px;
         border-radius: 16px;
-        width: 112px;
-        min-height: 56px;
       }
-      /* Reset keeps the width its old stack seat gave it
-         before Pack'em grew — now the plain button beside
-         the enlarged Pack'em in the bar's row. */
-      #resetBtn {
-        width: 91px;
-      }
-      /* Fixed seats (John's order, 2026-10-20 — "fix control
-         buttons, they all seemed to move"): every bar button
-         whose label changes gets ONE fixed width, sized for
-         its longest label, so a label change can never resize
-         the button and shove its neighbours along the
-         space-between row. "Start game" / "End game",
-         "Music: on" / "Music: off", "Bouncer: on" /
-         "Bouncer: off" — each pair now stands at one width in
-         both states. Reset (91px above) and Pack'em (112px
-         above) already stand at fixed widths, and Jump's label
-         never changes. The widths are sized for the larger
-         desktop type, so they hold at phone size too. A
-         switched-off button (Reset and Pack'em sit a round
-         out — see startGame) dims in its seat instead of
-         leaving the bar. */
-      #gameBtn { width: 112px; }
-      #musicBtn { width: 108px; }
-      #bouncerBtn { width: 122px; }
-      button:disabled { opacity: 0.45; cursor: default; }
+      /* No greyed-out buttons anywhere (John's ruling,
+         2026-10-20): nothing in the bar is ever disabled —
+         a button that can't be used in a state is off the
+         screen in that state instead (see .toolbar.in-round).
+         The only disabled buttons left are the rating stars
+         after a rating lands, and those keep their full
+         colour — disabled there only stops a second rating,
+         it never dims. */
+      button:disabled { cursor: default; }
       button:disabled:active { transform: none; }
       .gamehud {
         position: fixed;
         left: 50%;
-        bottom: calc(142px + env(safe-area-inset-bottom));
+        /* Clears the fixed two-row grid bar (136px tall on its
+           14px stand-off) with air to spare, in every state. */
+        bottom: calc(160px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         display: flex;
         flex-wrap: wrap;
@@ -634,28 +648,23 @@
       }
       @media (max-width: 480px) {
         button { padding: 11px 13px; font-size: 13.5px; }
-        /* Jump stays ~1.5x the (slightly smaller) phone buttons,
-           and the HUD lifts further: on a narrow phone the toolbar
-           can wrap to two rows with the tall Jump row, and the
-           chips must clear it. */
+        /* The grid's rows step down a touch at phone width —
+           the one and only size change the bar ever makes, and
+           it is a viewport change, not a state change: within
+           a state at this width every box is the grid's. The
+           HUD lifts further so the chips clear the two-row bar. */
+        .toolbar { grid-template-rows: 52px 52px; }
+        /* Jump and Pack'em keep their enlarged type at phone
+           width too, stepped down with the phone buttons. */
         #shakeBtn {
           font-size: 20px;
-          padding: 16px 24px;
+          padding: 16px 10px;
           border-radius: 15px;
-          min-width: 102px;
-          min-height: 52px;
         }
-        /* Pack'em keeps its enlarged size at phone width too,
-           stepped down with the phone buttons like Jump's. */
         #addBtn {
           font-size: 20px;
           padding: 16px 6px;
           border-radius: 15px;
-          width: 102px;
-          min-height: 52px;
-        }
-        #resetBtn {
-          width: 81px;
         }
         .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
@@ -4654,20 +4663,21 @@
           roundDeck = null; // dealt out — later spawns are free play again
           roundKinds = null;
           gameOn = true;
-          // No + Item and no Reset in the game — but no button
-          // ever leaves its seat (John's order, 2026-10-20:
-          // "fix control buttons, they all seemed to move").
-          // Reset and Pack'em used to be pulled out of the
-          // document for the whole round and JUMP traded seats
-          // with the game button, so the whole row reshuffled
-          // at Start and again at End. Now both buttons simply
-          // switch OFF in place — dimmed and untappable for the
-          // round, so nothing on the round screen can add a
-          // piece (a round is exactly 15) or settle the pile
-          // back to the lobby crowd — and endGame switches them
-          // back on in the very seats they never left.
-          resetBtn.disabled = true;
-          addBtn.disabled = true;
+          // No Pack'em and no Reset during a round — and no
+          // greyed-out buttons, ever (John's ruling, 2026-10-20:
+          // "There should be no grade out those buttons if
+          // they're not, and you should not be on the screen").
+          // The bar's in-round class takes both buttons off the
+          // screen entirely for the round — their grid cells
+          // stand empty, so End game, Jump, Music and Bouncer
+          // keep their exact lobby boxes — and nothing on the
+          // round screen can add a piece (a round is exactly
+          // 15) or settle the pile back to the lobby crowd.
+          // endGame lifts the class and both buttons are back
+          // in the seats they never left. The click handlers
+          // below also refuse outright while a round runs, as
+          // a belt-and-braces guard.
+          toolbarEl.classList.add("in-round");
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
@@ -4697,11 +4707,11 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // The round is over: Reset and Pack'em switch back on
-          // in the seats they never left — no button moves at
-          // Start, at End, or anywhere between (see startGame).
-          resetBtn.disabled = false;
-          addBtn.disabled = false;
+          // The round is over: Reset and Pack'em come back on
+          // screen in the grid cells that stood empty for them —
+          // no button moves at Start, at End, or anywhere
+          // between (see startGame).
+          toolbarEl.classList.remove("in-round");
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
