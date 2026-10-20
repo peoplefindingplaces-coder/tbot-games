@@ -203,21 +203,28 @@
       }
       /* The bottom bar, TBOT Garden style (John's word,
          2026-10-20): a real bar, not a floating blob — it
-         spans the Garden bar's width (min(780px, 100vw − 20px))
-         with the control groups pinned apart across it
-         (space-between), so no dead panel stretches under the
-         buttons. On phones the media query below seats the
-         buttons in a planned grid of the same full-width bar. */
+         spans the Garden bar's width (min(780px, 100vw − 20px)),
+         so no dead panel stretches under the buttons. Its
+         three columns are two equal side tracks around an
+         auto middle track, which puts JUMP in the exact
+         middle of the bar (John's word, 2026-10-20 — "jump
+         button is supposed to be in the middle"): Start game
+         holds the left track's start, the two stacks ride
+         together in the right track, and because the side
+         tracks are equal, Jump's centre is the bar's centre
+         in the lobby, mid-round and behind the end card
+         alike. On phones the media query below seats the
+         buttons in a planned grid of the same full-width bar,
+         Jump in its middle column there too. */
       .toolbar {
         position: fixed;
         left: 50%;
         bottom: calc(14px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(auto, 1fr) auto minmax(auto, 1fr);
         align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
-        justify-content: space-between;
         width: min(780px, calc(100vw - 20px));
         padding: 8px;
         border-radius: 18px;
@@ -226,6 +233,19 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+      }
+      #gameBtn { justify-self: start; }
+      /* The bar's right-hand group: the free-play stack and
+         the sound stack side by side in the right track, in
+         the order they have always read across the bar. On
+         phones the group dissolves (display: contents in the
+         media query below) so its buttons seat directly in
+         the phone grid's own cells. */
+      .bar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-self: end;
       }
       /* The sound stack: Music on top, the Bouncer toggle directly
          under it — the game's two sound switches read as one little
@@ -722,15 +742,19 @@
            Pack’em's full-size footprint in column 1, Jump's
            footprint in column 2, the sound toggles' pinned
            width in column 3 (Music over Bouncer there) — and each row is the tall
-           buttons' 52px phone height. */
+           buttons' 52px phone height. The two outer tracks
+           share one width (122px), so Jump's middle column is
+           centred in the bar exactly, not approximately —
+           Jump sits in the middle here just as it does on the
+           desktop bar (John's word, 2026-10-20). */
         .toolbar {
           display: grid;
-          grid-template-columns: 117px 102px 122px;
+          grid-template-columns: 122px 102px 122px;
           grid-template-rows: 52px 52px;
           justify-content: space-between;
           row-gap: 8px;
         }
-        .pack-stack, .sound-stack { display: contents; }
+        .bar-right, .pack-stack, .sound-stack { display: contents; }
         #gameBtn { grid-row: 1; grid-column: 1; }
         #shakeBtn { grid-row: 1; grid-column: 2; }
         #musicBtn { grid-row: 1; grid-column: 3; }
@@ -787,13 +811,15 @@
     <div class="toolbar">
       <button id="gameBtn" type="button">Start game</button>
       <button class="primary" id="shakeBtn" type="button">Jump</button>
-      <div class="pack-stack" id="packStack">
-        <button id="resetBtn" type="button">Reset</button>
-        <button id="addBtn" type="button">Pack’em</button>
-      </div>
-      <div class="sound-stack" id="soundStack">
-        <button id="musicBtn" type="button">Music: off</button>
-        <button id="bouncerBtn" type="button">Bouncer: on</button>
+      <div class="bar-right">
+        <div class="pack-stack" id="packStack">
+          <button id="resetBtn" type="button">Reset</button>
+          <button id="addBtn" type="button">Pack’em</button>
+        </div>
+        <div class="sound-stack" id="soundStack">
+          <button id="musicBtn" type="button">Music: off</button>
+          <button id="bouncerBtn" type="button">Bouncer: on</button>
+        </div>
       </div>
     </div>
 
