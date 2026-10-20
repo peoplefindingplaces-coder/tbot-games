@@ -202,18 +202,32 @@
       @media (min-width: 900px) {
         .brand-logo { top: calc(26px + env(safe-area-inset-top)); }
       }
+      /* The bottom bar, rebuilt TBOT Garden–style (John's
+         order, 2026-10-20: "The bottom is big in the free game
+         part — I want it to be like the TBOT Garden"): a
+         defined-width grid bar centred on the screen, the
+         controls seated in ONE row — Start game at the left
+         edge, JUMP in the middle, the Reset / Pack’em pair and
+         the Music / Bouncer pair as short horizontal groups
+         toward the right — instead of the old content-width
+         flex panel, whose two vertical stacks wrapped into a
+         tall block that ate the bottom of the room on a phone.
+         The seats are grid columns on the bar's four children;
+         below 760px the same seats fold into Garden's compact
+         two-row arrangement (see the media query further
+         down). The physics floor reads this bar's height
+         (floorInset), so the pile re-seats itself above
+         whatever height the bar lands at. */
       .toolbar {
         position: fixed;
         left: 50%;
         bottom: calc(14px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto auto 1fr;
         align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
-        width: max-content;
-        max-width: calc(100vw - 20px);
+        width: min(780px, calc(100vw - 20px));
         padding: 8px;
         border-radius: 18px;
         background: var(--bar-bg);
@@ -222,24 +236,30 @@
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
       }
-      /* The sound stack: Music on top, the Bouncer toggle directly
-         under it — the game's two sound switches read as one little
-         stack at the toolbar's end. */
+      #gameBtn { grid-column: 1; justify-self: start; }
+      #shakeBtn { grid-column: 2; }
+      .pack-stack { grid-column: 3; }
+      .sound-stack { grid-column: 4; justify-self: end; }
+      /* The sound pair: Music and the Bouncer toggle side by
+         side in one short row at the bar's right end — the
+         game's two sound switches read as one little group,
+         the way Garden seats its sound control. */
       .sound-stack {
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 6px;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
       }
-      /* The pile stack: Reset on top, Pack’em directly under it
-         in the same column, with clear breathing room between
-         the two — they read as two separate stacked buttons,
-         not one tight block. */
+      /* The pile pair: Reset and Pack’em side by side in one
+         short row — two plain buttons next to each other, the
+         way Garden seats its + TBOT / Reset pair. Pack’em
+         keeps the plain button size here now (its old
+         enlarged seat belonged to the tall stacked bar). */
       .pack-stack {
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
       }
       button {
         appearance: none;
@@ -277,40 +297,27 @@
         min-width: 106px;
         min-height: 56px;
       }
-      /* The Pack’em button in the lobby / free-mode pack-stack,
-         enlarged to the same full size as the enlarged JUMP
-         button above: the same 22px label and 56px tap height,
-         seated at a 112px-wide box (its longer label takes a
-         narrower side padding than Jump's, so the box lands on
-         the enlarged class's width instead of overshooting it).
-         Reset keeps its plain size above it in the stack — the
-         stack's stretch alignment gives it this column's width,
-         its height and type stay the plain button's. The winner
-         card's Pack’em (#freeBtn, in .over-btns) is a different
-         button and keeps its card size. */
-      #addBtn {
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 0.01em;
-        padding: 17px 9px;
-        border-radius: 16px;
-        min-width: 112px;
-        min-height: 56px;
-      }
       /* In-round seat swap (the same switch as TBOT Garden and
          ZBOT BBQ): while a round is live, startGame puts the
          .in-round class on the toolbar and the two action
-         buttons trade seats by flex order alone — JUMP sits
-         LEFT, at its full enlarged size, in End game's old seat;
-         End game sits DEAD-CENTRE, in JUMP's old seat; the
-         Music/Bouncer stack stays on the right, unmoved. Every
-         button keeps its size, styling and behaviour — only the
-         seats change. endGame drops the class, so the lobby /
-         Pack’em toolbar reads exactly as it always has:
-         Start game, Jump, the Pack’em/Reset stack, sound stack. */
-      .toolbar.in-round #shakeBtn { order: 1; }
-      .toolbar.in-round #gameBtn { order: 2; }
-      .toolbar.in-round .sound-stack { order: 3; }
+         buttons trade seats by grid column alone — the bar
+         re-seats to three columns and JUMP sits LEFT, at its
+         full enlarged size, in End game's old seat; End game
+         sits DEAD-CENTRE, in JUMP's old seat; the Music/Bouncer
+         pair stays on the right, unmoved. (The Reset / Pack’em
+         pair is out of the document for the whole round — see
+         startGame.) Every button keeps its size, styling and
+         behaviour — only the seats change. (The swapped pair
+         also pins grid-row: 1 explicitly: with columns alone,
+         grid auto-placement would drop JUMP to a second row
+         for taking a column left of End game's.) endGame
+         drops the class, so the lobby / Pack’em bar reads
+         exactly as it does on entry: Start game, Jump, the
+         Reset / Pack’em pair, the sound pair, in one row. */
+      .toolbar.in-round { grid-template-columns: 1fr auto 1fr; }
+      .toolbar.in-round #shakeBtn { grid-column: 1; grid-row: 1; justify-self: start; }
+      .toolbar.in-round #gameBtn { grid-column: 2; grid-row: 1; justify-self: center; }
+      .toolbar.in-round .sound-stack { grid-column: 3; grid-row: 1; justify-self: end; }
       .gamehud {
         position: fixed;
         left: 50%;
@@ -626,11 +633,46 @@
         .over-best { margin-bottom: 4px; }
         .rate-box { margin-bottom: 3px; }
       }
+      /* Narrow screens: the bar's six controls cannot share
+         one row, so the seats fold into TBOT Garden's compact
+         two-row arrangement — Start game top-left with the
+         Reset / Pack’em pair top-right, JUMP under Start game
+         with the sound pair beside it on the same row, kept
+         side by side (the pair never stacks vertically in
+         its corner; on the narrowest phones its two buttons
+         trim a touch so the pair still fits — see the 480px
+         block below). The middle track is slack, so each
+         group hugs its own edge exactly as on the wide bar.
+         In a round the fold is JUMP left and End game right
+         on the top row, with the sound pair centred on the
+         row under them, and the HUD offsets below keep the
+         chips clear of both folds. */
+      @media (max-width: 760px) {
+        .toolbar { grid-template-columns: auto 1fr auto; }
+        #gameBtn { grid-column: 1; grid-row: 1; justify-self: start; }
+        .pack-stack { grid-column: 3; grid-row: 1; justify-self: end; }
+        #shakeBtn { grid-column: 1; grid-row: 2; justify-self: start; }
+        .sound-stack {
+          grid-column: 3;
+          grid-row: 2;
+          justify-self: end;
+          flex-wrap: nowrap;
+        }
+        .toolbar.in-round { grid-template-columns: auto 1fr auto; }
+        .toolbar.in-round #shakeBtn { grid-column: 1; grid-row: 1; justify-self: start; }
+        .toolbar.in-round #gameBtn { grid-column: 3; grid-row: 1; justify-self: end; }
+        .toolbar.in-round .sound-stack {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          justify-self: center;
+          justify-content: center;
+        }
+      }
       @media (max-width: 480px) {
         button { padding: 11px 13px; font-size: 13.5px; }
         /* Jump stays ~1.5x the (slightly smaller) phone buttons,
-           and the HUD lifts further: on a narrow phone the toolbar
-           can wrap to two rows with the tall Jump row, and the
+           and the HUD lifts further: on a narrow phone the bar
+           folds to two rows with the tall Jump row, and the
            chips must clear it. */
         #shakeBtn {
           font-size: 20px;
@@ -639,17 +681,11 @@
           min-width: 102px;
           min-height: 52px;
         }
-        /* Pack’em keeps its enlarged seat at phone width too:
-           the same full size as phone Jump — a 102×52 box with
-           the 20px label (narrower side padding for its longer
-           label, as on desktop). */
-        #addBtn {
-          font-size: 20px;
-          padding: 16px 9px;
-          border-radius: 15px;
-          min-width: 102px;
-          min-height: 52px;
-        }
+        /* The sound pair trims a touch at phone width so
+           Music and Bouncer still sit side by side in their
+           row on the narrowest phones instead of stacking. */
+        .sound-stack { gap: 6px; }
+        .sound-stack button { font-size: 13px; padding: 10px 12px; }
         .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
@@ -885,7 +921,8 @@
         // experiences, added to the deck on top of the core 17.
         // Item #2 of that list is EXCLUDED entirely (tours paused
         // for the Hitsville NEXT expansion until Spring 2027, held
-        // out per John's ruling) — so 49 items live here. Entries
+        // out per John's ruling) — so 49 items from that list
+        // live here, ahead of the venue expansion further down. Entries
         // are evergreen unless they carry a season window ["MM-DD",
         // "MM-DD"] (America/Detroit); a seasonal entry deals only
         // while today's month-day falls inside its window (a window
@@ -941,7 +978,53 @@
           { name: "Detroit Axe", link: "https://detroitaxe.com/" },
           { name: "The Schvitz", link: "https://schvitzdetroit.com/" },
           { name: "Ford Rouge Factory Tour", link: "https://www.thehenryford.org/visit/venues/ford-rouge-factory-tour/" },
-          { name: "Wheelhouse Detroit", link: "http://www.wheelhousedetroit.com/", season: ["04-15", "10-31"] }
+          { name: "Wheelhouse Detroit", link: "http://www.wheelhousedetroit.com/", season: ["04-15", "10-31"] },
+          // ---------- Venue expansion (2026-10-20, John's order) ----------
+          // 34 more evergreen "while you're here" places, researched
+          // and verified open the same day, each linking to the
+          // venue's OWN site, none duplicating the deck above:
+          // art galleries and institutes (10), museums (8), music
+          // venues (9) and comedy venues (7 more — Sound Board
+          // books stand-up monthly too and is cross-listed in the
+          // research, but deals here once). The Motown Museum
+          // stays out until spring, per John's standing word. Two
+          // museums (Zekelman Holocaust Center, Cranbrook) sit
+          // ~20–25 minutes out, past the core ring — flagged in
+          // the research file, shipped on John's word.
+          { name: "Scarab Club", link: "https://www.scarabclub.org" },
+          { name: "Detroit Artists Market", link: "https://www.detroitartistsmarket.org" },
+          { name: "Wasserman Projects", link: "https://www.wassermanprojects.com" },
+          { name: "Library Street Collective", link: "https://www.lscgallery.com" },
+          { name: "CCS Charach Galleries", link: "https://campus.collegeforcreativestudies.edu" },
+          { name: "Galerie Camille", link: "https://www.galeriecamille.com" },
+          { name: "Norwest Gallery of Art", link: "https://www.norwestgallery.com" },
+          { name: "N'Namdi Center for Contemporary Art", link: "https://www.nnamdicenter.org" },
+          { name: "Playground Detroit", link: "https://www.playgrounddetroit.com" },
+          { name: "Elaine L. Jacob Gallery", link: "https://www.waynestategalleries.org" },
+          { name: "Dabls MBAD African Bead Museum", link: "https://www.mbad.org" },
+          { name: "Arab American National Museum", link: "https://www.arabamericanmuseum.org" },
+          { name: "Automotive Hall of Fame", link: "https://www.automotivehalloffame.org" },
+          { name: "The Zekelman Holocaust Center", link: "https://www.holocaustcenter.org" },
+          { name: "Tuskegee Airmen Museum", link: "https://www.tuskegeemuseum.org" },
+          { name: "The Parade Company Studio Tours", link: "https://www.theparade.org" },
+          { name: "Belle Isle Nature Center", link: "https://www.belleislenaturecenter.org" },
+          { name: "Cranbrook Institute of Science", link: "https://science.cranbrook.edu" },
+          { name: "The Fillmore Detroit", link: "https://www.thefillmoredetroit.com" },
+          { name: "Saint Andrew's Hall", link: "https://www.saintandrewsdetroit.com" },
+          { name: "Music Hall Center for the Performing Arts", link: "https://www.musichall.org" },
+          { name: "Orchestra Hall", link: "https://www.dso.org" },
+          { name: "Masonic Temple Detroit", link: "https://www.themasonic.com" },
+          { name: "Aretha Franklin Amphitheatre", link: "https://www.thearetha.com" },
+          { name: "Sound Board at MotorCity Casino Hotel", link: "https://www.motorcitycasino.com" },
+          { name: "Royal Oak Music Theatre", link: "https://www.royaloakmusictheatre.com" },
+          { name: "Little Caesars Arena", link: "https://www.313presents.com/venues-events/little-caesars-arena" },
+          { name: "Mark Ridley's Comedy Castle", link: "https://www.comedycastle.com" },
+          { name: "Mic Drop Comedy Detroit", link: "https://www.micdropcomedydetroit.com" },
+          { name: "The Comedy Bar", link: "https://www.comedybar.com/detroit" },
+          { name: "Planet Ant Theatre", link: "https://www.planetant.com" },
+          { name: "Go Comedy! Improv Theater", link: "https://www.gocomedy.net" },
+          { name: "Tony Roney's Comic Vibe", link: "https://www.tonyroneyscomicvibe.com" },
+          { name: "Punchline Comedy Lounge", link: "https://www.comedypunchline.com" }
         ];
 
         // ================================================================
@@ -1209,10 +1292,19 @@
         // foot, directly above the buttons: one pick per card, rotating through the list
         // play by play (see showEats). Every entry was verified for
         // this edition: name, Google star rating, cuisine, and its
-        // real distance from the house — all eight sit within
+        // real distance from the house — all twelve sit within
         // about a 15-minute drive. The link is the restaurant's
         // OWN site, opened by the player's own tap.
         // Refresh the slate by editing THIS block only.
+        // EXPANSION TO 12 (2026-10-20, John's order; research
+        // verified the same day): the last four entries are the
+        // additions, each tagged in its cuisine line with the
+        // meal it fits (brunch / lunch / dinner), so the plate
+        // covers all three meals. Their stars are the Places
+        // index figures — the same source the shipped list
+        // cites; Redcoat Tavern's and Trattoria Da Luigi's
+        // Google-side readings run lower (4.1–4.3), flagged in
+        // the research file and shipped on John's word.
         // ================================================================
         var RESTAURANTS = [
           { name: "Tai Fai Restaurant", stars: 4.7, cuisine: "Asian & sushi", dist: "0.7 mi", link: "https://www.taifairestaurant.com/" },
@@ -1222,7 +1314,11 @@
           { name: "Coolidge Cafe", stars: 4.5, cuisine: "American diner", dist: "0.4 mi", link: "https://coolidgecafe1.com/893-2/" },
           { name: "Mabel Gray", stars: 4.9, cuisine: "New American", dist: "3.8 mi", link: "http://mabelgraykitchen.com/" },
           { name: "Vinsetta Garage", stars: 4.5, cuisine: "American comfort food", dist: "2.9 mi", link: "https://www.vinsettagarage.com/" },
-          { name: "Alchemi", stars: 4.5, cuisine: "Farm-to-table", dist: "2.9 mi", link: "https://alchemiroyaloak.com/" }
+          { name: "Alchemi", stars: 4.5, cuisine: "Farm-to-table", dist: "2.9 mi", link: "https://alchemiroyaloak.com/" },
+          { name: "The Fly Trap", stars: 4.6, cuisine: "Diner · brunch & lunch", dist: "2.1 mi", link: "https://www.theflytrapferndale.com/" },
+          { name: "Inyo", stars: 4.5, cuisine: "Asian fusion · lunch & dinner", dist: "2.0 mi", link: "http://www.inyorestaurant.com/" },
+          { name: "Redcoat Tavern", stars: 4.6, cuisine: "Gastropub · lunch & dinner", dist: "5.5 mi", link: "https://redcoat-tavern.com/" },
+          { name: "Trattoria Da Luigi", stars: 4.6, cuisine: "Italian · dinner", dist: "2.7 mi", link: "https://daluigis.com/" }
         ];
 
         // ================================================================
@@ -1272,30 +1368,53 @@
           return base + "?tqx=out:json%3BresponseHandler:";
         }
 
+        // ---------- Rotation seat (shared by photos + tracks) ----------
+        // Reads the position the dual store kept from the last
+        // visit, seats it, and stores the NEXT position, so
+        // consecutive visits walk the list in order and wrap
+        // around to the top. Where the store kept nothing usable
+        // the visit is either a first visit or — the case that
+        // used to pin every returning player to the list's first
+        // entry — a context whose storage never survives between
+        // visits (in-app webviews, private windows, cleared site
+        // data: both copies of the dual store come back empty).
+        // There the seat is dealt from the visit clock instead:
+        // the load's second steps through the list, so successive
+        // visits land on different entries and no visitor is
+        // stuck on #1; the dealt seat is still written to the
+        // store, so a context whose storage starts surviving
+        // picks the ordered walk back up from there. The seat is
+        // read exactly once per load, so the pick holds for the
+        // whole session either way.
+        function rotationSeat(key, n) {
+          var stored = parseInt(storeRead(key), 10);
+          if (!isNaN(stored) && stored >= 0) {
+            var seated = stored % n;
+            storeWrite(key, String((seated + 1) % n));
+            return seated;
+          }
+          var dealt = Math.floor(Date.now() / 1000) % n;
+          storeWrite(key, String((dealt + 1) % n));
+          return dealt;
+        }
+
         // ---------- Photo rotation ----------
         // The listing's photos switch up between visits exactly
         // like its songs: the rotation position is kept per
         // device in the game's dual store (the storeRead /
         // storeWrite helpers further down are function
         // declarations, hoisted, so they serve here exactly as
-        // they serve the track rotation). Each load reads the
-        // stored position, seats PHOTOS[position] as the stage's
-        // background for the whole session — one photo per
-        // session — and stores the NEXT position, so consecutive
-        // plays walk through every photo of the listing in order
-        // and wrap around to the top. A one-photo list seats its
-        // photo every time and the stored position stays 0.
-        // Where both stores are blocked the read simply misses
-        // and every load starts at the top of the list — the
-        // game itself never notices.
+        // they serve the track rotation) and seated through the
+        // shared rotation seat above. Each load seats
+        // PHOTOS[position] as the stage's background for the
+        // whole session — one photo per session. A one-photo
+        // list seats its photo every time.
         var PHOTO_POS_KEY = "pfpPhotoPos";
         var photoIndex = 0;
         (function seatPhoto() {
           var n = SKIN.PHOTOS.length;
           if (!n) return;
-          var stored = parseInt(storeRead(PHOTO_POS_KEY), 10);
-          if (!isNaN(stored) && stored >= 0) photoIndex = stored % n;
-          storeWrite(PHOTO_POS_KEY, String((photoIndex + 1) % n));
+          photoIndex = rotationSeat(PHOTO_POS_KEY, n);
         })();
         var skinPhoto = SKIN.PHOTOS.length ? SKIN.PHOTOS[photoIndex] : "";
 
@@ -1309,27 +1428,24 @@
         brandPropEl.textContent = "at " + SKIN.PROPERTY_NAME;
 
         // ---------- Track rotation ----------
-        // The edition's songs switch up between visits: the
-        // rotation position is kept per device in the game's dual
-        // store (localStorage + a long-lived cookie — the
-        // storeRead / storeWrite helpers further down are function
-        // declarations, hoisted, so they serve here exactly as
-        // they serve the device tag). Each load reads the stored
-        // position, seats TRACKS[position] for the whole session,
-        // and stores the NEXT position, so consecutive plays run
-        // through the list in order and wrap around to the top.
-        // A one-track list seats its track every time and the
-        // stored position stays 0. Where both stores are blocked
-        // the read simply misses and every load starts at the top
-        // of the list — the game itself never notices.
+        // The edition's songs switch up between visits on the
+        // same seat as the photos: the rotation position is kept
+        // per device in the game's dual store (localStorage + a
+        // long-lived cookie — the storeRead / storeWrite helpers
+        // further down are function declarations, hoisted, so
+        // they serve here exactly as they serve the device tag)
+        // and seated through the shared rotation seat above, so
+        // a context whose storage doesn't survive between visits
+        // still hears a different track on the next visit instead
+        // of the list's first song every time. Each load seats
+        // TRACKS[position] for the whole session. A one-track
+        // list seats its track every time.
         var TRACK_POS_KEY = "pfpTrackPos";
         var trackIndex = 0;
         (function seatTrack() {
           var n = SKIN.TRACKS.length;
           if (!n) return;
-          var stored = parseInt(storeRead(TRACK_POS_KEY), 10);
-          if (!isNaN(stored) && stored >= 0) trackIndex = stored % n;
-          storeWrite(TRACK_POS_KEY, String((trackIndex + 1) % n));
+          trackIndex = rotationSeat(TRACK_POS_KEY, n);
         })();
         var skinTrack = SKIN.TRACKS.length ? SKIN.TRACKS[trackIndex] : "";
         bgMusic.src = skinTrack;
@@ -4686,9 +4802,9 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // The round is over: Pack’em gets its pile stack back,
-          // in its exact old spot (right before the sound stack) —
-          // Reset on top, Pack’em directly under it, both working
+          // The round is over: Pack’em gets its pile pair back,
+          // in its exact old spot (right before the sound pair) —
+          // Reset and Pack’em side by side, both working
           // exactly as they always have.
           if (!packStack.parentNode) toolbarEl.insertBefore(packStack, soundStack);
           // The ring eases home: updateHole now winds the drift
