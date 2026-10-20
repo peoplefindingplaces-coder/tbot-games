@@ -275,6 +275,21 @@
       .toolbar.in-round #addBtn {
         visibility: hidden;
       }
+      /* In a round, the sound pair moves to the right side
+         of Jump, stacked (John's order, 2026-10-20: "the
+         music and bounce when the game starts should move
+         to the right side of the jump button stacked"):
+         Music over Bouncer in the right column, in the
+         seats Reset and Pack'em leave empty. The move is a
+         transform only — no seat, size, or bar height
+         changes, and endGame drops it with .in-round. The
+         columns are equal thirds, so 100% + the 8px column
+         gap is exactly one column at any width; the lift
+         is Jump's height plus the 8px row gap. */
+      .toolbar.in-round #musicBtn,
+      .toolbar.in-round #bouncerBtn {
+        transform: translate(calc(100% + 8px), -64px);
+      }
       button {
         appearance: none;
         border: 0;
@@ -661,6 +676,10 @@
           font-size: 20px;
           padding: 16px 10px;
           border-radius: 15px;
+        }
+        .toolbar.in-round #musicBtn,
+        .toolbar.in-round #bouncerBtn {
+          transform: translate(calc(100% + 8px), -60px);
         }
         #addBtn {
           font-size: 20px;
