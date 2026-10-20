@@ -271,6 +271,22 @@
       button.primary.on {
         background: #1d9e50;
       }
+      /* Fixed seats (John's ruling, 2026-10-20 — "fix control
+         buttons they all seemed to move"): no button ever
+         changes size between states, so a label change can
+         never nudge a neighbour across the bar. The game
+         button's box fits its wider label ("Start game")
+         whether it reads Start or End; the sound stack's
+         buttons share one fixed width that fits the wider
+         toggle word ("off") on either switch. */
+      #gameBtn { min-width: 7.6em; }
+      .sound-stack button { min-width: 9.3em; }
+      /* A button parked for the round (Reset and Pack’em
+         while a game runs — see startGame) keeps its seat
+         and its full size: it only dims, and it cannot be
+         pressed. */
+      button:disabled { opacity: 0.45; cursor: default; }
+      button:disabled:active { transform: none; }
       /* The JUMP button, enlarged: roughly one-and-a-half times a
          plain button's footprint — taller and wider, label scaled
          up to match — so it is an easier, more confident tap
@@ -643,6 +659,21 @@
           min-height: 52px;
         }
         #resetBtn { width: 81px; }
+        /* The fixed seats hold at phone width too, sized to
+           the phone grid: the game button keeps the width of
+           its wider label. Of the sound toggles, Music needs
+           no pin here — Jump governs their shared grid column
+           in both of Music's states, so Music's box can never
+           widen the column. Bouncer's column-mate is the
+           narrow Reset, so Bouncer carries the pin itself:
+           the width of its wider "off" label, with slimmer
+           side padding so the pinned box still fits the bar
+           (the shared 9.3em stack width above is a desktop
+           measure — at phone width it pushed Bouncer out of
+           the bar's right edge). */
+        #gameBtn { min-width: 7.9em; }
+        #musicBtn { min-width: 0; }
+        #bouncerBtn { min-width: 9em; padding-left: 9px; padding-right: 9px; }
         /* The free-game bar on a phone (John's word, 2026-10-20
            — "the bottom is big in the free game part… like the
            TBOT Garden"): the old flex bar wrapped wherever it
@@ -654,10 +685,10 @@
            over three — Start / Jump / Reset over Pack’em /
            Music / Bouncer — two button-rows tall (~128px) with
            nothing left over. Grid seats follow document order,
-           so the script's workings are untouched: in a round
-           Jump still swaps to the left seat, and Reset /
-           Pack’em leaving the document just leaves their
-           seats out of the grid. */
+           and the seats never change: in a round every button
+           keeps its grid seat (Reset and Pack’em stay in
+           theirs, disabled and dimmed), so the grid the round
+           runs on is the grid the lobby showed. */
         .toolbar {
           display: grid;
           grid-template-columns: repeat(3, auto);
@@ -1494,7 +1525,7 @@
         bgMusic.src = skinTrack;
 
         var W = 0, H = 0, DPR = 1;
-        var floorInset = 0; // physics floor sits just above the toolbar so the pile never hides behind it
+        var floorInset = 0; // the pile's floor: the top edge of the bottom bar — the pieces rest ON the bar (measured in resize)
         var toolbarEl = document.querySelector(".toolbar");
 
         function floorY() { return H - floorInset; }
@@ -2332,15 +2363,23 @@
           canvas.style.width = W + "px";
           canvas.style.height = H + "px";
           ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-          // The floor rides at the very bottom (John's ruling,
-          // 2026-10-19, second pass — lower still than the first
-          // floor-anchoring): the toolbar's own height plus just
-          // 6px, so resting pieces' bottoms sit essentially ON
-          // the field's bottom edge — the widest pieces' sprites
-          // overhang the floor line by only a few pixels, and
-          // that slim 6px still keeps every piece wholly clear
-          // of the toolbar below.
-          floorInset = toolbarEl ? toolbarEl.offsetHeight + 6 : 0;
+          // The floor is the TOP EDGE of the bottom bar (John's
+          // ruling, 2026-10-20 — "the items should sit on top
+          // of the bar"): the inset is measured off the bar's
+          // own live position, so a resting piece's bottom
+          // lands exactly on the bar's top edge and the pile
+          // sits on the bar like a counter — nothing sinks
+          // behind the bar or below it, whatever the bar's
+          // height or the screen's safe-area inset. (The old
+          // measure — the bar's height plus 6px — forgot the
+          // bar's 14px stand-off from the screen's bottom, so
+          // the floor ran 8px under the bar's top edge and the
+          // pile sank into the bar.) Because the control
+          // buttons now keep their seats in every state (see
+          // startGame), the bar's top edge is the same line in
+          // the lobby and mid-round alike, so the floor never
+          // jumps between states either.
+          floorInset = toolbarEl ? Math.max(0, H - toolbarEl.getBoundingClientRect().top) : 0;
           // The hole, a little bigger (John's ruling, 2026-10-19):
           // every term of the sizing is the old one × 1.15, so the
           // ring the player sees and every radius derived from
@@ -4798,24 +4837,23 @@
           roundDeck = null; // dealt out — later spawns are free play again
           roundKinds = null;
           gameOn = true;
-          // No + Item and no Reset in the game. Both buttons leave
-          // the toolbar for the whole round — not hidden, GONE from
-          // the document — so while a round is running nothing on
-          // the round screen can add a piece (a round is exactly
-          // 15) or settle the pile back to the lobby crowd. endGame
-          // puts both buttons back, in their exact old spots, for
-          // Free Play.
-          if (addBtn.parentNode) addBtn.parentNode.removeChild(addBtn);
-          if (resetBtn.parentNode) resetBtn.parentNode.removeChild(resetBtn);
-          // The round-time seat swap (John's ruling, the same one
-          // the sister games carry): JUMP takes the LEFT seat at
-          // its full enlarged size — the game button's old spot —
-          // and the game button, about to read "End game", takes
-          // JUMP's old seat dead-centre. The sound stack stays put
-          // at the right. Only the seats change: every button keeps
-          // its size, styling and behaviour, and endGame trades
-          // them back so the lobby toolbar is exactly as it was.
-          toolbarEl.insertBefore(shakeBtn, gameBtn);
+          // Fixed seats (John's ruling, 2026-10-20 — "fix
+          // control buttons they all seemed to move"): NO button
+          // leaves the bar, swaps seats, or changes size for a
+          // round — the bar the round runs under is pixel-for-
+          // pixel the lobby bar, so nothing on screen jumps when
+          // a round starts or ends. (The old behaviour — Reset
+          // and Pack’em pulled out of the document, JUMP and the
+          // game button trading seats — rearranged the whole
+          // bar on every Start and every End.) Reset and Pack’em
+          // stay in their stack, disabled for the round: visible
+          // in their seats, dimmed, and unpressable, so nothing
+          // on the round screen can add a piece (a round is
+          // exactly 15) or settle the pile back to the lobby
+          // crowd — and their click handlers refuse mid-round
+          // besides. endGame re-enables them in place.
+          addBtn.disabled = true;
+          resetBtn.disabled = true;
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
@@ -4845,18 +4883,12 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // The round-time seat swap trades back with the round:
-          // the game button returns to the left seat and JUMP to
-          // its place beside it, so Free Play's toolbar reads
-          // exactly as it did before the round.
-          toolbarEl.insertBefore(gameBtn, shakeBtn);
-          // The round is over: Free Play gets its Reset button back
-          // first (into the free-play stack's top seat), then its
-          // Pack'em button, in its exact seat directly under Reset
-          // in that same stack, both working exactly as they
-          // always have.
-          if (!resetBtn.parentNode) packStack.appendChild(resetBtn);
-          if (!addBtn.parentNode) packStack.appendChild(addBtn);
+          // Fixed seats: no button moved for the round, so none
+          // moves back — Free Play simply gets its Reset and
+          // Pack’em buttons working again, in the same seats
+          // they held all round.
+          addBtn.disabled = false;
+          resetBtn.disabled = false;
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
@@ -4969,19 +5001,19 @@
         });
 
         addBtn.addEventListener("click", function () {
-          // Belt and braces beside the round-time removal above:
-          // even a programmatic click on the detached button can
-          // never add a piece mid-round. In Free Play it adds 3,
-          // exactly as it always has.
+          // Belt and braces beside the round-time disabling
+          // above: even a programmatic click can never add a
+          // piece mid-round. In Free Play it adds 3, exactly
+          // as it always has.
           if (gameOn) return;
           spawn(3);
         });
         shakeBtn.addEventListener("click", shake);
         resetBtn.addEventListener("click", function () {
-          // Belt and braces beside the round-time removal above:
-          // even a programmatic click on the detached button can
-          // never reset the pile mid-round. In Free Play it settles
-          // the pile back to the full crowd.
+          // Belt and braces beside the round-time disabling
+          // above: even a programmatic click can never reset
+          // the pile mid-round. In Free Play it settles the
+          // pile back to the full crowd.
           if (gameOn) return;
           reset();
         });
