@@ -247,13 +247,15 @@
         height: 100%;
         min-width: 0;
       }
-      /* The fixed seats: row 1 — game, Jump, Reset; row 2 —
-         Pack'em, Music, Bouncer. These never change. */
+      /* The fixed seats: row 1 — game, Jump, Music; row 2 —
+         Pack'em, Reset, Bouncer. Music sits directly over
+         Bouncer in column 3, stacked on top of each other
+         (John's order, 2026-10-20). These never change. */
       #gameBtn { grid-column: 1; grid-row: 1; }
       #shakeBtn { grid-column: 2; grid-row: 1; }
-      #resetBtn { grid-column: 3; grid-row: 1; }
+      #musicBtn { grid-column: 3; grid-row: 1; }
       #addBtn { grid-column: 1; grid-row: 2; }
-      #musicBtn { grid-column: 2; grid-row: 2; }
+      #resetBtn { grid-column: 2; grid-row: 2; }
       #bouncerBtn { grid-column: 3; grid-row: 2; }
       /* Mid-round, Reset and Pack'em are off the screen — not
          dimmed, not greyed (John's ruling) — while their cells
@@ -270,9 +272,9 @@
          Garden-style bar they lay their buttons straight into
          the bar's row instead: the wrappers are display:contents,
          so the buttons keep their place in the document but the
-         wrappers add no box of their own to the layout. Group
-         order in the row is the document order: Reset beside
-         Pack'em, Music beside Bouncer. */
+         wrappers add no box of their own to the layout. Each
+         button's seat comes from the fixed grid placement
+         above, not from document order. */
       .sound-stack,
       .pack-stack {
         display: contents;
