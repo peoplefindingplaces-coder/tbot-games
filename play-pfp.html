@@ -697,9 +697,14 @@
            TBOT Garden"): like the Garden's phone bar, it is a
            planned grid across the full-width bar — the two
            stacks dissolve (display: contents) and the six
-           buttons seat three over three: Start / Jump / Reset
-           over Pack’em / Music / Bouncer, two button-rows tall
-           (~128px) with nothing left over.
+           buttons seat three over three: Start / Jump / Music
+           over Pack’em / Reset / Bouncer, two button-rows tall
+           (~128px) with nothing left over. Music seats in the
+           right-hand column directly OVER Bouncer (John's word,
+           2026-10-20 — "the music should be over the bouncer…
+           they should be over each other"), the same stack the
+           desktop bar's sound stack makes; Reset takes Music's
+           old middle seat in the second row to make room.
            The grid is FIXED (John's no-greyed-buttons ruling,
            2026-10-20): every button is pinned to its own cell
            by name, and the column and row tracks are fixed
@@ -715,8 +720,8 @@
            never do. Track widths are the lobby's own column
            widths — the game button's pinned width and
            Pack’em's full-size footprint in column 1, Jump's
-           footprint in column 2, the Bouncer toggle's pinned
-           width in column 3 — and each row is the tall
+           footprint in column 2, the sound toggles' pinned
+           width in column 3 (Music over Bouncer there) — and each row is the tall
            buttons' 52px phone height. */
         .toolbar {
           display: grid;
@@ -728,9 +733,9 @@
         .pack-stack, .sound-stack { display: contents; }
         #gameBtn { grid-row: 1; grid-column: 1; }
         #shakeBtn { grid-row: 1; grid-column: 2; }
-        #resetBtn { grid-row: 1; grid-column: 3; }
+        #musicBtn { grid-row: 1; grid-column: 3; }
         #addBtn { grid-row: 2; grid-column: 1; }
-        #musicBtn { grid-row: 2; grid-column: 2; }
+        #resetBtn { grid-row: 2; grid-column: 2; }
         #bouncerBtn { grid-row: 2; grid-column: 3; }
         .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
