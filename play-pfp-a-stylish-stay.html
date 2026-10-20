@@ -203,32 +203,41 @@
       @media (min-width: 900px) {
         .brand-logo { top: calc(26px + env(safe-area-inset-top)); }
       }
-      /* The bottom bar, TBOT Garden style (John's order,
-         2026-10-20: "The bottom is big in the free game part...
-         I want it to be like the TBOT Garden"): one slim bar
-         spanning the screen's width (capped at the Garden's
-         780px) — never the tall content-width card the stacked
-         groups used to make of it.
-         The bar is a FIXED GRID (John's ruling, 2026-10-20:
-         the buttons kept moving, resizing and re-wrapping on
-         his phone, and greyed-out buttons are banned): three
-         equal columns by two fixed-height rows, one named cell
-         per button, and every button fills its cell — so a
-         button's size and seat come from the grid alone, never
-         from its label, and nothing can re-flow when a label
-         flips (Start game/End game, Music: on/off, Bouncer:
-         on/off) or when a button leaves the screen. During a
-         round Reset and Pack'em are NOT greyed out — they are
-         off the screen entirely (visibility:hidden, see
-         .toolbar.in-round below) and their cells stand empty. */
+      /* The bottom bar in John's three-column layout
+         (settled 2026-10-20 from his own picture — "Should
+         look like this" — and his standing word that the Jump
+         button sits in the middle), spanning the screen's
+         width (capped at 780px):
+           LEFT — Start game, alone at the top of its column.
+           CENTRE — Jump in the middle, heading the centre
+             column, enlarged; Music stacked directly under
+             it, Bouncer directly under Music (Music over
+             Bouncer, John's order) — the three share one
+             centre line down the middle of the bar.
+           RIGHT — Reset over Pack'em: Reset on top at the
+             standard height, Pack'em enlarged underneath.
+         The seats are FIXED (John's ruling, 2026-10-20: the
+         buttons kept moving, resizing and re-wrapping on
+         his phone, and greyed-out buttons are banned): each
+         column is a fixed third of the bar, and each button's
+         height is its own type and padding, never its label —
+         so nothing can re-flow when a label flips (Start
+         game/End game, Music: on/off, Bouncer: on/off) or
+         when a button leaves the screen. During a round
+         Reset and Pack'em are NOT greyed out — they are off
+         the screen entirely (visibility:hidden, see
+         .toolbar.in-round below) and their column stands
+         empty. The bar's height is the centre column's,
+         which never changes, so the bar stands at one
+         height in the lobby, in a round, and on the end
+         card alike. */
       .toolbar {
         position: fixed;
         left: 50%;
         bottom: calc(14px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: 56px 56px;
+        display: flex;
+        align-items: flex-start;
         gap: 8px;
         width: min(780px, calc(100vw - 20px));
         padding: 8px;
@@ -239,45 +248,32 @@
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
       }
-      /* Every bar button fills its grid cell exactly — width
-         and height are the cell's, in the lobby, in a round,
-         and on the end card alike. */
+      /* The three columns: each a fixed third of the bar's
+         inner width, its buttons stacked top-down with the
+         bar's own gap. A button fills its column's width;
+         its height is its type and padding — the standard
+         buttons stand ~37px, and Jump and Pack'em stand
+         56px on their enlarged type (the #shakeBtn and
+         #addBtn rules below). */
+      .bar-col {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
       .toolbar button {
         width: 100%;
-        height: 100%;
         min-width: 0;
       }
-      /* The fixed seats: row 1 — game, Jump, Music; row 2 —
-         Pack'em, Reset, Bouncer. Music sits directly over
-         Bouncer in column 3, stacked on top of each other
-         (John's order, 2026-10-20). These never change. */
-      #gameBtn { grid-column: 1; grid-row: 1; }
-      #shakeBtn { grid-column: 2; grid-row: 1; }
-      #musicBtn { grid-column: 3; grid-row: 1; }
-      #addBtn { grid-column: 1; grid-row: 2; }
-      #resetBtn { grid-column: 2; grid-row: 2; }
-      #bouncerBtn { grid-column: 3; grid-row: 2; }
       /* Mid-round, Reset and Pack'em are off the screen — not
-         dimmed, not greyed (John's ruling) — while their cells
-         stay in the grid, empty, so the four buttons that
-         remain keep their exact lobby boxes. */
+         dimmed, not greyed (John's ruling) — while the right
+         column keeps the space they stood in, so the four
+         buttons that remain keep their exact lobby boxes and
+         the bar keeps its exact lobby height. */
       .toolbar.in-round #resetBtn,
       .toolbar.in-round #addBtn {
         visibility: hidden;
-      }
-      /* The two button groups — Reset with Pack'em, Music with
-         the Bouncer toggle — used to sit in the bar as vertical
-         stacks, and the stacks are what made the free-play bar
-         a tall card eating the bottom of the screen. In the
-         Garden-style bar they lay their buttons straight into
-         the bar's row instead: the wrappers are display:contents,
-         so the buttons keep their place in the document but the
-         wrappers add no box of their own to the layout. Each
-         button's seat comes from the fixed grid placement
-         above, not from document order. */
-      .sound-stack,
-      .pack-stack {
-        display: contents;
       }
       button {
         appearance: none;
@@ -302,11 +298,12 @@
       button.primary.on {
         background: #1d9e50;
       }
-      /* The JUMP button, enlarged type: its label is scaled up
-         to match its full-height grid cell — an easier, more
-         confident tap target mid-round on a phone. The cell
-         (row 1, column 2) fixes the footprint; only the type
-         is set here. */
+      /* The JUMP button, enlarged type: it heads the centre
+         column — Jump in the middle (John's order) — with
+         Music and Bouncer stacked under it. The enlarged type
+         and padding are what stand it 56px tall, an easier,
+         more confident tap target mid-round on a phone; its
+         seat and width are the centre column's. */
       #shakeBtn {
         font-size: 22px;
         font-weight: 800;
@@ -315,9 +312,9 @@
         border-radius: 16px;
       }
       /* The toolbar Pack'em button wears the same enlarged
-         type as Jump; its footprint is its grid cell (row 2,
-         column 1). The winner card's Pack'em is a different
-         button and keeps its card size. */
+         type as Jump and stands 56px tall on it, under Reset
+         in the right-hand column. The winner card's Pack'em
+         is a different button and keeps its card size. */
       #addBtn {
         font-size: 22px;
         font-weight: 800;
@@ -338,9 +335,10 @@
       .gamehud {
         position: fixed;
         left: 50%;
-        /* Clears the fixed two-row grid bar (136px tall on its
-           14px stand-off) with air to spare, in every state. */
-        bottom: calc(160px + env(safe-area-inset-bottom));
+        /* Clears the three-column bar (162px tall on its 14px
+           stand-off — the centre column sets the height) with
+           air to spare, in every state. */
+        bottom: calc(188px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         display: flex;
         flex-wrap: wrap;
@@ -650,12 +648,13 @@
       }
       @media (max-width: 480px) {
         button { padding: 11px 13px; font-size: 13.5px; }
-        /* The grid's rows step down a touch at phone width —
-           the one and only size change the bar ever makes, and
-           it is a viewport change, not a state change: within
-           a state at this width every box is the grid's. The
-           HUD lifts further so the chips clear the two-row bar. */
-        .toolbar { grid-template-rows: 52px 52px; }
+        /* The three columns hold at phone width — same
+           columns, same seats; only the type steps down a
+           touch with the phone buttons (Jump and Pack'em to
+           52px tall, the bar to 156px). That is a viewport
+           change, not a state change: within a state at this
+           width every box is its column's. The HUD lifts so
+           the chips clear the bar. */
         /* Jump and Pack'em keep their enlarged type at phone
            width too, stepped down with the phone buttons. */
         #shakeBtn {
@@ -668,7 +667,7 @@
           padding: 16px 6px;
           border-radius: 15px;
         }
-        .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
+        .gamehud { bottom: calc(184px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
       }
@@ -713,16 +712,27 @@
       <div class="brand-prop" id="brandProp">at A Stylish Stay</div>
     </div>
 
+    <!-- The bottom bar in John's three-column layout: Start
+         game alone on the left; Jump in the middle, heading
+         the centre column with Music over Bouncer stacked
+         under it; Reset over Pack'em on the right. The columns
+         are the seats — see the .toolbar rules in the style
+         block. The two column ids stay from the bar's earlier
+         stacks: soundStack on the centre column (it holds the
+         sound pair under Jump), packStack on the right
+         (Reset with Pack'em). -->
     <div class="toolbar">
-      <button id="gameBtn" type="button">Start game</button>
-      <button class="primary" id="shakeBtn" type="button">Jump</button>
-      <div class="pack-stack" id="packStack">
-        <button id="resetBtn" type="button">Reset</button>
-        <button id="addBtn" type="button">Pack’em</button>
+      <div class="bar-col">
+        <button id="gameBtn" type="button">Start game</button>
       </div>
-      <div class="sound-stack" id="soundStack">
+      <div class="bar-col" id="soundStack">
+        <button class="primary" id="shakeBtn" type="button">Jump</button>
         <button id="musicBtn" type="button">Music: off</button>
         <button id="bouncerBtn" type="button">Bouncer: on</button>
+      </div>
+      <div class="bar-col" id="packStack">
+        <button id="resetBtn" type="button">Reset</button>
+        <button id="addBtn" type="button">Pack’em</button>
       </div>
     </div>
 
