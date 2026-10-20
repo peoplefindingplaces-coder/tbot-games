@@ -205,27 +205,32 @@
       /* The bottom bar, rebuilt TBOT Garden–style (John's
          order, 2026-10-20: "The bottom is big in the free game
          part — I want it to be like the TBOT Garden"): a
-         defined-width grid bar centred on the screen, the
-         controls seated in ONE row — Start game at the left
-         edge, JUMP in the middle, the Reset / Pack’em pair as
-         a short horizontal group and the Music / Bouncer pair
-         stacked one over the other toward the right — instead
-         of the old content-width
-         flex panel, whose two vertical stacks wrapped into a
-         tall block that ate the bottom of the room on a phone.
-         The seats are grid columns on the bar's four children;
-         below 760px the same seats fold into Garden's compact
-         two-row arrangement (see the media query further
-         down). The physics floor reads this bar's height
-         (floorInset), so the pile re-seats itself above
-         whatever height the bar lands at. */
+         defined-width grid bar centred on the screen — and
+         JUMP dead centre on it at every width (John's order,
+         2026-10-20: "Jump button is supposed to be in the
+         middle for all the PFP games and last TBOT in"). The
+         grid is three tracks — minmax(0,1fr) / auto /
+         minmax(0,1fr) — with JUMP alone in the middle track:
+         the two side tracks always split the leftover width
+         exactly evenly (their content can overflow its track
+         rather than fatten it), so JUMP's centre is the bar's
+         centre is the screen's centre, on a wide monitor and
+         on a phone alike. The seats, one arrangement at every
+         width: Start game top-left, JUMP top-middle, the
+         Reset / Pack’em pair as a short horizontal group on
+         the second row under Start game and JUMP, and the
+         Music / Bouncer pair stacked one over the other in a
+         column spanning both rows at the right end. The
+         physics floor reads this bar's height (floorInset),
+         so the pile re-seats itself above whatever height
+         the bar lands at. */
       .toolbar {
         position: fixed;
         left: 50%;
         bottom: calc(14px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         display: grid;
-        grid-template-columns: 1fr auto auto 1fr;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
         align-items: center;
         gap: 8px;
         width: min(780px, calc(100vw - 20px));
@@ -237,10 +242,10 @@
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
       }
-      #gameBtn { grid-column: 1; justify-self: start; }
-      #shakeBtn { grid-column: 2; }
-      .pack-stack { grid-column: 3; }
-      .sound-stack { grid-column: 4; justify-self: end; }
+      #gameBtn { grid-column: 1; grid-row: 1; justify-self: start; }
+      #shakeBtn { grid-column: 2; grid-row: 1; justify-self: center; }
+      .pack-stack { grid-column: 1 / 3; grid-row: 2; justify-self: start; }
+      .sound-stack { grid-column: 3; grid-row: 1 / 3; justify-self: end; }
       /* The sound pair: Music stacked directly OVER the
          Bouncer toggle in one short column at the bar's
          right end (John's order, 2026-10-20: "the music
@@ -648,41 +653,27 @@
         .over-best { margin-bottom: 4px; }
         .rate-box { margin-bottom: 3px; }
       }
-      /* Narrow screens: the bar's six controls cannot share
-         one row, so the seats fold into TBOT Garden's compact
-         two-row arrangement — Start game top-left with the
-         Reset / Pack’em pair top-right, JUMP under Start game
-         with the sound pair beside it on the same row, Music
-         stacked over Bouncer in its corner exactly as on the
-         wide bar (on the narrowest phones its two buttons
-         trim a touch so the stack stays compact — see the
-         480px block below). The middle track is slack, so each
-         group hugs its own edge exactly as on the wide bar.
-         The fold is the same in a round as out of one — no
-         button changes seats when a round starts or ends
-         (John's order, 2026-10-20) — and the HUD offsets
-         below keep the chips clear of the fold. */
+      /* Narrow screens: no fold — the bar keeps the one
+         arrangement it has at every width (Start game
+         top-left, JUMP top-middle dead centre, the Reset /
+         Pack’em pair on the second row, Music stacked over
+         Bouncer in its right-end column; on the narrowest
+         phones the sound pair's two buttons trim a touch so
+         the stack stays compact — see the 480px block
+         below). The seats are the same in a round as out of
+         one — no button changes seats when a round starts
+         or ends (John's order, 2026-10-20) — and the HUD
+         offset below keeps the chips clear of the bar's
+         top edge. */
       @media (max-width: 760px) {
-        .toolbar { grid-template-columns: auto 1fr auto; }
-        #gameBtn { grid-column: 1; grid-row: 1; justify-self: start; }
-        .pack-stack { grid-column: 3; grid-row: 1; justify-self: end; }
-        #shakeBtn { grid-column: 1; grid-row: 2; justify-self: start; }
-        .sound-stack {
-          grid-column: 3;
-          grid-row: 2;
-          justify-self: end;
-        }
-        /* The stacked sound pair makes this fold's second
-           row taller than the old side-by-side pair did, so
-           the HUD chips lift to clear the bar's top edge. */
-        .gamehud { bottom: calc(176px + env(safe-area-inset-bottom)); }
+        .gamehud { bottom: calc(148px + env(safe-area-inset-bottom)); }
       }
       @media (max-width: 480px) {
         button { padding: 11px 13px; font-size: 13.5px; }
         /* Jump stays ~1.5x the (slightly smaller) phone buttons,
-           and the HUD lifts further: on a narrow phone the bar
-           folds to two rows with the tall Jump row, and the
-           chips must clear it. */
+           still dead centre in the bar's middle track, and the
+           HUD offset keeps the chips clear of the bar's top
+           edge on the narrowest phones. */
         #shakeBtn {
           font-size: 20px;
           padding: 16px 24px;
@@ -695,7 +686,7 @@
            compact in its corner on the narrowest phones. */
         .sound-stack { gap: 6px; }
         .sound-stack button { font-size: 13px; padding: 10px 12px; }
-        .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
+        .gamehud { bottom: calc(144px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
       }
