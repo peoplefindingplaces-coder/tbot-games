@@ -297,27 +297,21 @@
         min-width: 106px;
         min-height: 56px;
       }
-      /* In-round seat swap (the same switch as TBOT Garden and
-         ZBOT BBQ): while a round is live, startGame puts the
-         .in-round class on the toolbar and the two action
-         buttons trade seats by grid column alone — the bar
-         re-seats to three columns and JUMP sits LEFT, at its
-         full enlarged size, in End game's old seat; End game
-         sits DEAD-CENTRE, in JUMP's old seat; the Music/Bouncer
-         pair stays on the right, unmoved. (The Reset / Pack’em
-         pair is out of the document for the whole round — see
-         startGame.) Every button keeps its size, styling and
-         behaviour — only the seats change. (The swapped pair
-         also pins grid-row: 1 explicitly: with columns alone,
-         grid auto-placement would drop JUMP to a second row
-         for taking a column left of End game's.) endGame
-         drops the class, so the lobby / Pack’em bar reads
-         exactly as it does on entry: Start game, Jump, the
-         Reset / Pack’em pair, the sound pair, in one row. */
-      .toolbar.in-round { grid-template-columns: 1fr auto 1fr; }
-      .toolbar.in-round #shakeBtn { grid-column: 1; grid-row: 1; justify-self: start; }
-      .toolbar.in-round #gameBtn { grid-column: 2; grid-row: 1; justify-self: center; }
-      .toolbar.in-round .sound-stack { grid-column: 3; grid-row: 1; justify-self: end; }
+      /* The control buttons NEVER move (John's order,
+         2026-10-20 — "Fix control buttons they all seemed to
+         move"): every button holds the exact seat it has in
+         the lobby for the whole round — Start game / End game
+         at the left edge, JUMP in the middle, the sound pair
+         on the right — and the bar's grid is never re-seated.
+         The old in-round seat swap (JUMP trading seats with
+         the game button) is gone, and the Reset / Pack’em
+         pair no longer leaves the document mid-round: it
+         stays in its seat and is only made invisible and
+         untappable for the round (startGame adds .away,
+         endGame drops it), so the bar keeps its exact shape
+         and the pile's floor — the bar's top edge — never
+         shifts under the pieces. */
+      .pack-stack.away { visibility: hidden; }
       .gamehud {
         position: fixed;
         left: 50%;
@@ -643,10 +637,10 @@
          trim a touch so the pair still fits — see the 480px
          block below). The middle track is slack, so each
          group hugs its own edge exactly as on the wide bar.
-         In a round the fold is JUMP left and End game right
-         on the top row, with the sound pair centred on the
-         row under them, and the HUD offsets below keep the
-         chips clear of both folds. */
+         The fold is the same in a round as out of one — no
+         button changes seats when a round starts or ends
+         (John's order, 2026-10-20) — and the HUD offsets
+         below keep the chips clear of the fold. */
       @media (max-width: 760px) {
         .toolbar { grid-template-columns: auto 1fr auto; }
         #gameBtn { grid-column: 1; grid-row: 1; justify-self: start; }
@@ -657,15 +651,6 @@
           grid-row: 2;
           justify-self: end;
           flex-wrap: nowrap;
-        }
-        .toolbar.in-round { grid-template-columns: auto 1fr auto; }
-        .toolbar.in-round #shakeBtn { grid-column: 1; grid-row: 1; justify-self: start; }
-        .toolbar.in-round #gameBtn { grid-column: 3; grid-row: 1; justify-self: end; }
-        .toolbar.in-round .sound-stack {
-          grid-column: 1 / -1;
-          grid-row: 2;
-          justify-self: center;
-          justify-content: center;
         }
       }
       @media (max-width: 480px) {
@@ -1451,7 +1436,7 @@
         bgMusic.src = skinTrack;
 
         var W = 0, H = 0, DPR = 1;
-        var floorInset = 0; // physics floor sits just above the toolbar so the pile never hides behind it
+        var floorInset = 0; // physics floor: the toolbar's top edge, so the pile rests ON the bar (set in resize)
         var toolbarEl = document.querySelector(".toolbar");
 
         function floorY() { return H - floorInset; }
@@ -2255,18 +2240,21 @@
           canvas.style.width = W + "px";
           canvas.style.height = H + "px";
           ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-          // The floor sits at the very bottom of the field
-          // (John's ruling, 2026-10-19 — second, deeper lowering:
-          // the pieces hug the screen's bottom edge): the
-          // toolbar's own bottom offset is 14px, so an inset of
-          // toolbar height + 6 puts resting pieces' bottoms
-          // essentially ON the field's bottom edge — just a few
-          // pixels of clearance — with the pieces still fully
-          // visible and wholly clear of the toolbar. The whole
-          // living band (spawn grid, rest positions, Pack’em
-          // pile base) hangs off this floor via floorY(), so
-          // everything drops together, in the lobby and in rounds.
-          floorInset = toolbarEl ? toolbarEl.offsetHeight + 6 : 0;
+          // The floor IS the top edge of the toolbar bar
+          // (John's ruling, 2026-10-20 — "The items should sit
+          // on top of the bar"): the bar sits 14px up from the
+          // screen's bottom edge, so an inset of the bar's
+          // height + that 14px offset puts floorY() exactly on
+          // the bar's top edge and resting pieces sit ON the
+          // bar, never sinking behind it or sliding down to the
+          // screen's bottom edge. The whole living band (spawn
+          // grid, rest positions, Pack’em pile base) hangs off
+          // this floor via floorY(), so everything seats on the
+          // bar together, in the lobby and in rounds — and
+          // because the bar's shape never changes (the buttons
+          // keep their seats, see the style block), the floor
+          // never shifts mid-round.
+          floorInset = toolbarEl ? toolbarEl.offsetHeight + 14 : 0;
           // The hole, a little bigger (John's ruling, 2026-10-19):
           // every term of the sizing is the old one × 1.15, so the
           // ring the player sees and every radius derived from
@@ -4759,24 +4747,25 @@
           roundDeck = null; // dealt out — later spawns are Pack’em again
           roundKinds = null;
           gameOn = true;
-          // No Pack’em and no Reset in the game. The whole pack
-          // stack leaves the toolbar for the whole round — not
-          // hidden, GONE from the document — so while a round is
-          // running nothing on the round screen can add a piece
-          // (a round is exactly 15) or settle the pile back to
-          // the lobby crowd. endGame puts the stack back, in its
-          // exact old spot, for Pack’em.
-          if (packStack.parentNode) packStack.parentNode.removeChild(packStack);
+          // No Pack’em and no Reset in the game — but the pair
+          // no longer leaves the document (that yanked the bar
+          // into a new shape and moved every other button when
+          // a round started; John's order, 2026-10-20: the
+          // control buttons must not move). The pair stays in
+          // its seat for the whole round, only invisible and
+          // untappable (.away), so nothing on the round screen
+          // can add a piece (a round is exactly 15) or settle
+          // the pile back to the lobby crowd, and the bar —
+          // and the pile's floor on its top edge — never
+          // shifts. endGame drops .away for Pack’em.
+          packStack.classList.add("away");
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
           gameBtn.textContent = "End game";
-          // The in-round seat swap: JUMP moves to the left seat
-          // and End game takes JUMP's old centre seat for the
-          // whole round (see the .toolbar.in-round rules in the
-          // style block). endGame removes the class and the
-          // lobby toolbar is exactly as it was.
-          toolbarEl.classList.add("in-round");
+          // No seat swap: End game keeps Start game's seat at
+          // the bar's left edge and JUMP stays in the middle —
+          // the buttons never move (John's order, 2026-10-20).
           // The direction box is out of the started game. It leaves
           // with the round's other Pack’em pieces and the game's
           // name stands alone in the corner instead; endGame brings
@@ -4802,11 +4791,11 @@
           var finalIn = inCount;
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
-          // The round is over: Pack’em gets its pile pair back,
-          // in its exact old spot (right before the sound pair) —
-          // Reset and Pack’em side by side, both working
-          // exactly as they always have.
-          if (!packStack.parentNode) toolbarEl.insertBefore(packStack, soundStack);
+          // The round is over: Pack’em gets its pile pair back —
+          // it never left its seat, so this only makes it
+          // visible and tappable again, Reset and Pack’em side
+          // by side, both working exactly as they always have.
+          packStack.classList.remove("away");
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
@@ -4816,9 +4805,6 @@
           holeFadeT = 0;
           gameHud.hidden = true;
           gameBtn.textContent = "Start game";
-          // The seat swap ends with the round: JUMP and the
-          // game button return to their lobby seats.
-          toolbarEl.classList.remove("in-round");
           // Pack’em again: the direction box returns to the
           // corner and the bare round title steps away.
           hintEl.hidden = false;
