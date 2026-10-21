@@ -1025,9 +1025,10 @@
         // Stay → Timeless → LAGOS → sondaeblu → Stay — one song
         // per session, looping for the whole visit.
         // Where a visitor's context keeps neither store between
-        // visits, the seat turns with the clock instead of
-        // restarting at the top of either list (see the rotation
-        // seat in the apply block below).
+        // visits, neither seat restarts at the top of its list:
+        // the photo seat turns with the clock, and the track seat
+        // asks an IndexedDB-backed seat ahead of a time-scattered
+        // guess (see the rotation seats in the apply block below).
         // ================================================================
         var SKIN = {
           PROPERTY_NAME: "Great Stay",
@@ -1500,7 +1501,9 @@
         // ROTATES through this list across finished rounds — the
         // rotation position is kept per device in the game's dual
         // store, exactly like the track rotation, advancing in
-        // list order and wrapping around (see showEats) — so
+        // list order and wrapping around (see showEats, whose seat
+        // is hardened like the photo/track seats: per-home key,
+        // clock-turn fallback where the store does not survive) — so
         // repeat players see different picks. Winning rounds only:
         // the zero-in card never shows the block. Refresh the
         // slate by editing THIS block only.
@@ -1610,7 +1613,7 @@
           return base + "?tqx=out:json%3BresponseHandler:";
         }
 
-        // ---------- Rotation seat (shared by photo + track) ----------
+        // ---------- Rotation seat (photo; the track seat is hardened further below) ----------
         // Reads the position stored by the last visit and returns
         // the index to seat this session, storing the NEXT position
         // for the visit after. Where the store comes back, the tour
@@ -1619,7 +1622,7 @@
         // does not keep the game's stores between visits (an in-app
         // webview, a private window, cleared or partitioned site
         // data) — the seat must NOT fall back to the top of the
-        // list: that dealt photo #1 and track #1 on every visit, so
+        // list: that dealt the first photo on every visit, so
         // returning players saw and heard the same thing forever.
         // Instead the fallback seat turns with the clock (a fresh
         // turn every TURN_MS), so a player who comes back later
@@ -1640,6 +1643,98 @@
           var fall = ((turn % n) + n) % n;
           storeWrite(key, String((fall + 1) % n));
           return fall;
+        }
+
+        // ---------- Deep seat store (IndexedDB) ----------
+        // A THIRD home for a rotation position, behind the dual
+        // store and ahead of any clock guess. Some contexts — the
+        // in-app webview this game is most often opened in —
+        // accept localStorage and cookie writes during a visit
+        // and hand back NOTHING on the next one: every dual-store
+        // read misses there, so no tour can ever advance. IndexedDB
+        // lives under a different storage policy in those same
+        // contexts and often DOES come back. Its reads are
+        // asynchronous, so a seat that needs it seats a provisional
+        // entry synchronously and lets the deep answer re-seat the
+        // session the moment it lands — long before the first tap
+        // can start the sound (see the track seat below). Every
+        // helper fails silently: where IndexedDB is absent,
+        // blocked or cleared, the read reports a miss and the
+        // write is dropped, and the seat behind it carries on.
+        var SEAT_DB_NAME = "pfpSeats";
+        function idbSeatRead(key, cb) {
+          var done = false;
+          function finish(v) { if (!done) { done = true; cb(v); } }
+          try {
+            if (!window.indexedDB) { finish(null); return; }
+            var req = window.indexedDB.open(SEAT_DB_NAME, 1);
+            req.onupgradeneeded = function () {
+              try { req.result.createObjectStore("seats"); } catch (e) { /* store already there */ }
+            };
+            req.onerror = function () { finish(null); };
+            req.onblocked = function () { finish(null); };
+            req.onsuccess = function () {
+              var db = req.result;
+              try {
+                var get = db.transaction("seats", "readonly").objectStore("seats").get(key);
+                get.onsuccess = function () {
+                  finish(get.result == null ? null : String(get.result));
+                  try { db.close(); } catch (e) { /* already closed */ }
+                };
+                get.onerror = function () {
+                  finish(null);
+                  try { db.close(); } catch (e) { /* already closed */ }
+                };
+              } catch (e) {
+                finish(null);
+                try { db.close(); } catch (e2) { /* already closed */ }
+              }
+            };
+          } catch (e) { finish(null); }
+        }
+        function idbSeatWrite(key, value) {
+          try {
+            if (!window.indexedDB) return;
+            var req = window.indexedDB.open(SEAT_DB_NAME, 1);
+            req.onupgradeneeded = function () {
+              try { req.result.createObjectStore("seats"); } catch (e) { /* store already there */ }
+            };
+            req.onerror = function () { /* the write is dropped — the other stores stand */ };
+            req.onsuccess = function () {
+              var db = req.result;
+              try {
+                var tx = db.transaction("seats", "readwrite");
+                tx.objectStore("seats").put(value, key);
+                tx.oncomplete = function () { try { db.close(); } catch (e) { /* already closed */ } };
+                tx.onerror = function () { try { db.close(); } catch (e) { /* already closed */ } };
+              } catch (e) {
+                try { db.close(); } catch (e2) { /* already closed */ }
+              }
+            };
+          } catch (e) { /* IndexedDB blocked — the other stores stand */ }
+        }
+
+        // The storeless fallback seat for the track, de-aliased.
+        // The shared seat above turns with the clock in
+        // ROTATE_TURN_MS blocks: with four tracks those blocks
+        // repeat every 60 minutes, so visits an hour apart — or
+        // at the same time every day — were dealt the SAME song
+        // indefinitely; that alias is what "the music doesn't
+        // rotate" sounded like. This fallback instead hashes the
+        // epoch-minute count (a 32-bit integer mix), so visits
+        // minutes, hours or a day apart land on unrelated seats:
+        // no block of time shares one song, and no hour or day
+        // boundary brings the same song back around. It is still
+        // only a guess, for a context where NO store survives at
+        // all — the deep seat above is what carries the real,
+        // in-order tour in the webview.
+        function trackScatterIndex(n) {
+          var m = Math.floor(Date.now() / 60000) + 5; // the track seat's phase (5), in minutes now
+          var h = (m ^ 0x9E3779B9) >>> 0;
+          h = Math.imul(h ^ (h >>> 16), 0x21F0AAAD) >>> 0;
+          h = Math.imul(h ^ (h >>> 15), 0x735A2D97) >>> 0;
+          h = (h ^ (h >>> 15)) >>> 0;
+          return h % n;
         }
 
         // ---------- Photo rotation ----------
@@ -1675,31 +1770,99 @@
         // ---------- Track rotation ----------
         // The edition's songs ROTATE between sessions, in list
         // order and wrapping around: each load seats ONE track
-        // from the rotation position kept per device in the
-        // game's dual store (the storeRead / storeWrite helpers
-        // further down are function declarations, hoisted, so
-        // they serve here exactly as they serve the device tag),
-        // and that one song plays for the WHOLE session — every
-        // pass at the loop seam is the same track again, on both
-        // music engines (John, 2026-10-21 — "It's supposed to be
-        // one song per session"). The next song in the list
-        // seats on the NEXT visit. The seat is kept by the
-        // shared rotation seat above: consecutive visits run
-        // through the list in order and wrap around to the top
-        // where the store survives, and turn with the clock
-        // where it does not, so no visitor hears the first track
-        // every time. The position key is namespaced PER HOME:
-        // all three PFP homes share one hosting origin, so the
-        // old shared "pfpTrackPos" key let one home's visits
+        // from the rotation position kept per device, and that
+        // one song plays for the WHOLE session — every pass at
+        // the loop seam is the same track again, on both music
+        // engines (John, 2026-10-21 — "It's supposed to be one
+        // song per session"). The next song in the list seats on
+        // the NEXT visit. The position key is namespaced PER
+        // HOME: all three PFP homes share one hosting origin, so
+        // the old shared "pfpTrackPos" key let one home's visits
         // move another home's seat. A one-track list seats its
         // track every time either way.
+        //
+        // The seat is HARDENED (2026-10-21 — "Music also doesn't
+        // seem to be rotating"), because the position used to
+        // live ONLY in the dual store, with the shared seat's
+        // clock turn behind it:
+        //  - Where the dual store survives, the tour runs in
+        //    list order exactly as before — and the advanced
+        //    position is ALSO written to the deep (IndexedDB)
+        //    seat, keeping it healed from the live tour.
+        //  - Where the dual store's writes die between visits
+        //    (the in-app webview: writes land during a visit,
+        //    reads come back empty on the next), the deep seat
+        //    is asked next, ahead of any guess: if it holds a
+        //    position, the tour resumes from it in order.
+        //  - Where NO store survives, the seat falls to the
+        //    de-aliased scatter (trackScatterIndex above) — the
+        //    old 15-minute clock blocks repeated every 60
+        //    minutes with four tracks, so visits an hour apart
+        //    or at the same time daily were dealt the same song
+        //    forever.
+        // The deep read is asynchronous, so a dual-store miss
+        // seats the scatter guess synchronously (the page never
+        // waits on storage) and settleTrackSeat re-seats the
+        // session when the answer lands.
         var TRACK_POS_KEY = "pfpTrackPos.great-stay";
         var trackIndex = 0;
+        var trackSeatSource = "scatter"; // "store" | "idb" | "scatter" — read by the PFPMusic test hook
         (function seatTrack() {
           var n = SKIN.TRACKS.length;
           if (!n) return;
-          trackIndex = seatIndex(TRACK_POS_KEY, n, 5);
+          var stored = parseInt(storeRead(TRACK_POS_KEY), 10);
+          if (!isNaN(stored) && stored >= 0) {
+            trackSeatSource = "store";
+            trackIndex = stored % n;
+            var next = String((trackIndex + 1) % n);
+            storeWrite(TRACK_POS_KEY, next);
+            idbSeatWrite(TRACK_POS_KEY, next); // keep the deep seat healed from the live tour
+            return;
+          }
+          trackIndex = trackScatterIndex(n);
+          storeWrite(TRACK_POS_KEY, String((trackIndex + 1) % n));
+          idbSeatRead(TRACK_POS_KEY, function (v) { settleTrackSeat(v, n); });
         })();
+        // The deep seat's answer to a dual-store miss. A stored
+        // position outranks the provisional guess: the tour
+        // resumes from it, its next position is written to every
+        // store, and the session re-seats to it. No stored
+        // position (a first visit in a storeless context, or the
+        // deep store blocked too): the guess stands, and its next
+        // position becomes the deep seat's first entry, so the
+        // NEXT visit in this context tours in order from here.
+        function settleTrackSeat(idbValue, n) {
+          var stored = parseInt(idbValue, 10);
+          if (isNaN(stored) || stored < 0) {
+            idbSeatWrite(TRACK_POS_KEY, String((trackIndex + 1) % n));
+            return;
+          }
+          var idx = stored % n;
+          var next = String((idx + 1) % n);
+          idbSeatWrite(TRACK_POS_KEY, next);
+          storeWrite(TRACK_POS_KEY, next);
+          trackSeatSource = "idb";
+          if (idx !== trackIndex) reseatTrack(idx);
+        }
+        // Move the session's seat to the deep seat's position.
+        // The deep answer lands within moments of load — before
+        // any tap can start the sound — so in practice this just
+        // re-points the two music elements and re-aims the
+        // decode at the corrected track. If playback is somehow
+        // already confirmed on the provisional song, the session
+        // keeps it (one song per session); the corrected next
+        // position is already stored, so the tour resumes in
+        // order on the next visit.
+        function reseatTrack(idx) {
+          trackIndex = idx;
+          skinTrack = SKIN.TRACKS[idx];
+          if (musicPlaying || waActive || musicEngine !== "none") return;
+          bgMusic.src = skinTrack;
+          try { bgMusicB.src = skinTrack; } catch (e) { /* twin not built yet — it reads skinTrack when it is */ }
+          if (musicBuffer) musicBuffer = null; // a decode of the provisional track must not play
+          bufferFailed = false; // a provisional decode's failure is not the corrected track's
+          loadBuffer();
+        }
         var skinTrack = SKIN.TRACKS.length ? SKIN.TRACKS[trackIndex] : "";
         bgMusic.src = skinTrack;
 
@@ -3855,6 +4018,7 @@
           if (!ensureCtx() || musicBuffer || bufferFailed) return;
           var src = skinTrack;
           fetchBuffer(src, function (buf) {
+            if (src !== skinTrack) return; // the seat moved while this decoded (a deep-seat re-seat) — the corrected track's own load is in flight and this stale decode, success or failure, must not touch the engine
             if (!buf) {
               bufferFailed = true;
               // Decode is hopeless — if a start is already waiting
@@ -4307,9 +4471,11 @@
             waActive: waActive,
             waLive: waLive.length,
             waPosition: waPosition(),
-            // The rotation itself: which track is seated now and
-            // how many of the list sit decoded in the cache.
+            // The rotation itself: which track is seated now, which
+            // store seated it, and how many of the list sit decoded
+            // in the cache.
             trackIndex: trackIndex,
+            trackSeat: trackSeatSource,
             track: skinTrack,
             bufferedTracks: Object.keys(musicBuffers).length,
             elCurIsBg: elCur === bgMusic,
@@ -5235,13 +5401,52 @@
         // pattern as the music (see the track rotation seat).
         // Called only from showEvent: the zero-in card never
         // seats a pick and never advances the rotation.
-        var EATS_POS_KEY = "pfpEatsPos";
+        //
+        // The seat is HARDENED like the photo/track seats
+        // (2026-10-21 — "I keep getting the same restaurants"):
+        //  - The key is namespaced PER HOME ("pfpEatsPos.great-stay").
+        //    The old key, "pfpEatsPos", was shared by all three
+        //    PFP homes on the one hosting origin, so one home's
+        //    cards moved another home's seat. A position stored
+        //    under the old key is still read once (migration),
+        //    then carried under the new key.
+        //  - Where the store does not come back at all — the
+        //    in-app webview and other contexts that wipe or
+        //    partition site data between visits — the seat must
+        //    NOT fall back to the top of the list: that dealt
+        //    BARDA, the first entry, on every visit's first card.
+        //    Instead it turns with the clock, on the same
+        //    ROTATE_TURN_MS as the shared rotation seat, with
+        //    its own phase (11) so it never marches in lockstep
+        //    with the photo (0) or track (5) seats — plus a
+        //    session counter, so even where BOTH stores are
+        //    blocked outright, consecutive winning cards in one
+        //    visit still advance through the list instead of
+        //    re-dealing one name. The next position is written
+        //    either way, so if a later visit's store survives,
+        //    the in-order tour resumes from there.
+        var EATS_POS_KEY = "pfpEatsPos.great-stay";
+        var EATS_POS_KEY_LEGACY = "pfpEatsPos"; // the old shared key — read once for migration, never written
+        var eatsDealt = 0; // winning cards dealt this session — the seat's in-session counter
         var lastEatsPick = null; // the pick currently seated (read by the PFPEats test hook)
+        function eatsStoredPos() {
+          var stored = parseInt(storeRead(EATS_POS_KEY), 10);
+          if (isNaN(stored) || stored < 0) {
+            var legacy = parseInt(storeRead(EATS_POS_KEY_LEGACY), 10);
+            if (!isNaN(legacy) && legacy >= 0) stored = legacy;
+          }
+          return stored;
+        }
+        function eatsFallbackIndex(n) {
+          var turn = Math.floor(Date.now() / ROTATE_TURN_MS) + 11;
+          return (((turn + eatsDealt) % n) + n) % n;
+        }
         function showEats() {
           var n = RESTAURANTS.length;
           if (!n) { eatsBox.hidden = true; lastEatsPick = null; return; }
-          var stored = parseInt(storeRead(EATS_POS_KEY), 10);
-          var idx = (!isNaN(stored) && stored >= 0) ? stored % n : 0;
+          var stored = eatsStoredPos();
+          var idx = (!isNaN(stored) && stored >= 0) ? stored % n : eatsFallbackIndex(n);
+          eatsDealt++;
           var r = RESTAURANTS[idx];
           eatsName.textContent = r.name;
           eatsName.href = r.link;
@@ -5366,11 +5571,11 @@
         // showing, and the rotation position the NEXT winning
         // card will read.
         window.PFPEats = function () {
-          var stored = parseInt(storeRead(EATS_POS_KEY), 10);
+          var stored = eatsStoredPos();
           return {
             shown: !eatsBox.hidden,
             pick: lastEatsPick,
-            nextIndex: (!isNaN(stored) && stored >= 0) ? stored % RESTAURANTS.length : 0,
+            nextIndex: (!isNaN(stored) && stored >= 0) ? stored % RESTAURANTS.length : eatsFallbackIndex(RESTAURANTS.length),
             count: RESTAURANTS.length
           };
         };
