@@ -201,26 +201,55 @@
       @media (min-width: 900px) {
         .brand-logo { top: calc(26px + env(safe-area-inset-top)); }
       }
-      /* The bottom bar (John's word, 2026-10-21 — "You had
-         them you had it right on the last TBOT in. I just
-         wanted you to copy that across the board"): THREE
-         COLUMNS, copied from The Last TBOT In's bar. LEFT:
-         the Start/End face on top with the Music/Bouncer
-         stack directly underneath it. CENTRE: Jump, big.
-         RIGHT: Pack’em on top as the larger button, Reset
-         directly underneath it a little smaller. It spans
-         the Garden bar's width (min(780px, 100vw − 20px)),
-         so no dead panel stretches under the buttons. Its
-         three columns are two equal side tracks around an
-         auto middle track, which puts JUMP in the exact
-         middle of the bar (John's word, 2026-10-20 — "jump
-         button is supposed to be in the middle"): because
-         the side tracks are equal, Jump's centre is the
-         bar's centre in the lobby, mid-round and behind the
-         end card alike. On phones the media query below
-         seats the same three columns in a planned grid of
-         the same full-width bar, Jump in its middle column
-         there too. */
+      /* The bottom bar (John's pictures, 2026-10-21 — "This
+         is the Bar" / "In game Bar", with his height ruling
+         the same day: "The Bar is too wide now from top to
+         Bottom" — even in game mode): a COMPACT TWO-ROW
+         grid, three columns wide. The bottom row sits
+         directly beneath the top row with one small 8px
+         gap — no tall fixed height, no bottom row pinned
+         to the foot of a stretched bar, no dead vertical
+         space inside. The bar's total height is just its
+         two rows plus that gap and its padding, and it is
+         THE SAME in the lobby and mid-round, because both
+         states fill the same two rows:
+           LOBBY — top row: Start game left, Jump centre,
+           Pack’em right (the larger button, its size and
+           seat confirmed — never resized by any of this);
+           bottom row: the Music/Bouncer stack at the
+           bottom-LEFT, directly under Start, and Reset at
+           the right, directly under Pack’em, a little
+           smaller.
+           IN GAME — top row: Jump alone in the centre
+           (Pack’em and Reset have stepped off, hidden —
+           see startGame); bottom row: End game at the
+           bottom-LEFT and the Music/Bouncer stack at the
+           bottom-RIGHT, close beneath the Jump row. "End
+           at the lower part" means this lower ROW of the
+           compact bar, not the foot of an enlarged one.
+         The stack changes sides with the state and nothing
+         else about it changes: same 104px pills, Music
+         over Bouncer, live in both states. The seat switch
+         is pure CSS keyed to Reset's hidden attribute —
+         the round's exact marker (startGame sets it,
+         endGame clears it) — so the pair reseats in the
+         same breath the face swaps, on desktop and phone
+         alike. The two wrapper columns dissolve
+         (display: contents) and every button seats
+         directly in the grid by name. The columns are two
+         equal side tracks around an auto middle track,
+         which puts JUMP in the exact middle of the bar
+         (John's word, 2026-10-20 — "jump button is
+         supposed to be in the middle"): because the side
+         tracks are equal, Jump's centre is the bar's
+         centre in the lobby, mid-round and behind the end
+         card alike. The bar spans the Garden bar's width
+         (min(780px, 100vw − 20px)), and its top edge —
+         the pile's floor — is the same line in both
+         states, since the bar never changes height. On
+         phones the media query below seats the same
+         two rows in the same full-width bar with fixed
+         tracks, Jump in its middle column there too. */
       .toolbar {
         position: fixed;
         left: 50%;
@@ -228,8 +257,9 @@
         transform: translateX(-50%);
         display: grid;
         grid-template-columns: minmax(auto, 1fr) auto minmax(auto, 1fr);
-        align-items: center;
-        gap: 8px;
+        grid-template-rows: auto auto;
+        column-gap: 8px;
+        row-gap: 8px;
         width: min(780px, calc(100vw - 20px));
         padding: 8px;
         border-radius: 18px;
@@ -239,78 +269,64 @@
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
       }
-      /* The bar's left column (John's word, 2026-10-21 —
-         "the bounce and the sound should be underneath the
-         start"): the Start/End face on top, the sound stack
-         directly underneath it, both at the column's left
-         edge. The column never changes between the lobby
-         and a round — the face swaps its label and colour
-         in place, the toggles stay live under it — so the
-         stack's home under the face holds mid-round too.
-         On phones the column dissolves (display: contents
-         in the media query below) so its pieces seat
-         directly in the phone grid's own cells. */
-      .bar-left {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-        justify-self: start;
-      }
-      /* The sound stack: Music on top, the Bouncer toggle directly
-         under it — the game's two sound switches read as one
-         little stack, shrunk compact: each switch is a
-         ~104×23px pill, the smallest buttons on the bar,
-         labels still fully readable. */
+      /* The two wrapper columns carry no layout of their
+         own: they dissolve so the buttons and the sound
+         stack seat directly in the bar's two-row grid. */
+      .bar-left, .pack-stack { display: contents; }
+      /* The sound stack: Music on top, the Bouncer toggle
+         directly under it — the game's two sound switches
+         read as one little stack, shrunk compact: each
+         switch is a ~104×23px pill, the smallest buttons
+         on the bar, labels still fully readable. As one
+         grid item it fills the bottom row's height on
+         whichever side the state seats it (see the seat
+         rules below). */
       .sound-stack {
         display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: 4px;
       }
-      /* The right column (John's word, 2026-10-21 — "The
-         Packham should be on top and a larger button and
-         then the reset underneath as a little smaller"):
-         Pack’em ON TOP as the larger button, Reset directly
-         under it a little smaller — the two free-play pile
-         buttons in one column, with clear space between
-         them (12px, against the sound stack's tighter 4px),
-         so they read as two separate stacked buttons, not
-         one tight block. The column's size is PINNED to its
-         lobby size: during a round its two buttons are off
-         the screen entirely (hidden — see startGame and the
-         no-greyed-buttons ruling there), and the empty
-         column still holds its width and height, so the bar
-         keeps its exact shape, the buttons that stay keep
-         their exact seats, and the bar's top edge — the
-         pile's floor — never moves between the lobby and a
-         round. */
-      .pack-stack {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 12px;
-        min-width: 143px;
-        min-height: 105px;
-      }
-      /* Bar seats (John's word, 2026-10-21): the left
-         column in the left track, Jump in the middle track,
-         the right column in the right track. */
-      .bar-left { grid-row: 1; grid-column: 1; }
+      /* Bar seats (John's pictures, 2026-10-21): top row —
+         the game face left, Jump centre, Pack’em right;
+         bottom row — Reset right, at the top of the row
+         under Pack’em, and the sound stack, whose column
+         the state decides (the switch rule below). Row 1
+         is sized by its tallest button (Jump) and row 2
+         by the sound stack, in BOTH states — that is what
+         keeps the mid-round bar exactly as tall as the
+         lobby bar, with the bottom row close beneath the
+         Jump row and no void between them. */
+      #gameBtn { grid-row: 1; grid-column: 1; justify-self: start; align-self: center; }
       #shakeBtn { grid-row: 1; grid-column: 2; }
-      .pack-stack { grid-row: 1; grid-column: 3; justify-self: end; }
+      #addBtn { grid-row: 1; grid-column: 3; justify-self: end; align-self: center; }
+      #resetBtn { grid-row: 2; grid-column: 3; justify-self: end; align-self: start; }
+      .sound-stack { grid-row: 2; grid-column: 1; justify-self: start; }
       /* The face's two colours (John's word, 2026-10-21,
          as The Last TBOT In wears them): Start in gold, End
-         in the dark plain face — one seat at the top of the
-         left column, never moving. Reset's hidden attribute
+         in the dark plain face. Reset's hidden attribute
          is the round's exact marker: startGame sets it in
          the same breath that swaps the label to "End game",
          and endGame clears both together, so while it
          stands the face wears the dark face; the box never
-         changes (see the fixed-seats block below). */
+         changes (see the fixed-seats block below). The
+         same marker reseats the round: the face drops to
+         the bottom row's left cell, foot-aligned with the
+         stack across from it, and the sound stack takes
+         the bottom row's right cell — both close beneath
+         the Jump row, the compact bar unchanged in
+         height. When the round ends both return to their
+         lobby seats with the Start label — the buttons
+         move between their seats and never resize. */
       .toolbar:has(#resetBtn[hidden]) #gameBtn {
         background: var(--btn-bg);
         color: var(--btn-ink);
+        grid-row: 2;
+        align-self: end;
+      }
+      .toolbar:has(#resetBtn[hidden]) .sound-stack {
+        grid-column: 3;
+        justify-self: end;
       }
       button {
         appearance: none;
@@ -363,7 +379,7 @@
          the screen in that state at all. Reset and Pack’em
          are hidden outright for the whole round — this rule
          makes the hiding absolute, so no bar layout mode
-         (the desktop stacks, the phone grid) can keep a
+         (the desktop grid, the phone grid) can keep a
          removed button on screen. Nothing in the toolbar is
          ever shown disabled; the :disabled rules below now
          serve only the end card's star row, whose dimming
@@ -394,9 +410,8 @@
          directly underneath it. Its label is longer than
          JUMP's, so the box runs a little wider than JUMP's
          137px. Reset keeps its own current size under it:
-         its width is pinned here because the column's
-         stretch would otherwise widen it to the column's
-         width. */
+         its width is pinned here because its grid cell
+         would otherwise stretch it wider. */
       #addBtn {
         font-size: 22px;
         font-weight: 800;
@@ -412,11 +427,12 @@
       .gamehud {
         position: fixed;
         left: 50%;
-        /* Clears the bar's top edge by ~7px: the bar stands
-           ~121px tall (the right column's pinned 105px plus
-           its padding) on its 14px stand-off, so the chips
-           ride at 142px. */
-        bottom: calc(142px + env(safe-area-inset-bottom));
+        /* Clears the bar's top edge by ~7px: the compact
+           two-row bar stands ~142px tall (Jump's 68px row
+           + 8px gap + the sound stack's 50px row + its
+           padding) on its 14px stand-off, so the chips
+           ride at 163px. */
+        bottom: calc(163px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         display: flex;
         flex-wrap: wrap;
@@ -758,65 +774,54 @@
            faces, and the two sound toggles keep the compact
            stack's one fixed 104px box (the desktop
            .sound-stack rule above already gives them the
-           shrunken label size and padding), seated in the
-           left-hand column under the game face, Music over
-           Bouncer. */
+           shrunken label size and padding), Music over
+           Bouncer inside the stack's own cell. */
         #gameBtn { width: 104px; min-width: 0; }
         #musicBtn, #bouncerBtn { min-width: 0; width: 104px; }
-        /* The bar on a phone mirrors the desktop bar's three
-           columns (John's word, 2026-10-21 — The Last TBOT
-           In's bar, copied across the board) in a planned
-           grid across the full-width bar: the two columns
-           dissolve (display: contents) and the six buttons
-           seat in their own pinned cells. The left column
-           runs down the grid's left side — the game face in
-           the top row, Music under it in the second row,
-           Bouncer under Music in the third (John's words,
-           2026-10-20 — "the music should be over the
-           bouncer… they should be over each other" — and
-           2026-10-21 — "the bounce and the sound should be
-           underneath the start") — Jump big (130px) in the
-           top row's middle, and the right column seats
-           Pack’em in the top row with Reset directly under
-           it, top-aligned across the two lower rows. Each
-           toggle sits in its fixed 104px box in its own
-           slim row, one 8px gap between them, so the sound
-           pair reads as one tight stack down the left side.
-           The grid is FIXED (John's no-greyed-buttons ruling,
-           2026-10-20): every button is pinned to its own cell
-           by name, and the column and row tracks are fixed
-           sizes — never content-sized. During a round, Reset
-           and Pack’em are off the screen entirely (hidden, not
-           dimmed): their cells sit EMPTY, and because no
-           track is measured off any button, the buttons that
-           stay — End game, Jump, Music, Bouncer — keep the
-           exact boxes they had in the lobby, in the round,
-           and behind the end card; the End face keeps the
-           game face's own top-left seat, wearing the dark
-           face (the swap rule with the desktop seats above).
-           Label flips (Start/End, Music on/off, Bouncer
-           on/off) cannot resize anything either: the words
-           change inside boxes that never do. The two outer
-           tracks share one width (104px) around Jump's
-           130px, so Jump's middle column is centred in the
-           bar exactly, not approximately — Jump sits in the
-           middle here just as it does on the desktop bar
-           (John's word, 2026-10-20). */
+        /* The bar on a phone is the desktop bar's compact
+           TWO rows (John's pictures and height ruling,
+           2026-10-21) in a planned grid across the
+           full-width bar: the wrapper columns dissolve
+           (display: contents, in the desktop rules above)
+           and every button seats in its own pinned cell.
+           Top row: Start left in the lobby, Jump big
+           (130px) in the middle, Pack’em right. Bottom
+           row, one small 8px gap beneath it: the sound
+           stack under Start at the left and Reset under
+           Pack’em in the lobby; mid-round the End face in
+           the bottom row's left cell and the stack in its
+           right cell (the reseat rules with the desktop
+           seats above, keyed to the same hidden-Reset
+           marker). The grid is FIXED (John's
+           no-greyed-buttons ruling, 2026-10-20): the column
+           tracks are fixed sizes and the two rows are
+           sized by the same buttons in both states — the
+           52px Jump row and the sound stack's row — so
+           during a round, when Reset and Pack’em are off
+           the screen entirely (hidden, not dimmed) and
+           their cells sit EMPTY, the bar keeps the lobby's
+           exact height: THIN in game mode too, the bottom
+           row tucked directly beneath the Jump row with
+           no void between them, and the buttons that stay
+           — End game, Jump, Music, Bouncer — keep the
+           exact boxes they had in the lobby and behind the
+           end card. Label flips (Start/End, Music on/off,
+           Bouncer on/off) cannot resize anything either:
+           the words change inside boxes that never do.
+           The two outer tracks share one width (104px)
+           around Jump's 130px, so Jump's middle column is
+           centred in the bar exactly, not approximately —
+           Jump sits in the middle here just as it does on
+           the desktop bar (John's word, 2026-10-20). */
         .toolbar {
           display: grid;
           grid-template-columns: 104px 130px 104px;
-          grid-template-rows: 52px 24px 36px;
+          grid-template-rows: 52px auto;
           justify-content: space-between;
           row-gap: 8px;
         }
-        .bar-left, .pack-stack, .sound-stack { display: contents; }
-        #gameBtn { grid-row: 1; grid-column: 1; align-self: center; }
-        #shakeBtn { grid-row: 1; grid-column: 2; }
-        #addBtn { grid-row: 1; grid-column: 3; }
-        #musicBtn { grid-row: 2; grid-column: 1; }
-        #resetBtn { grid-row: 2 / span 2; grid-column: 3; justify-self: start; align-self: start; }
-        #bouncerBtn { grid-row: 3; grid-column: 1; align-self: start; }
-        .gamehud { bottom: calc(168px + env(safe-area-inset-bottom)); }
+        #resetBtn { justify-self: start; }
+        .gamehud { bottom: calc(147px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
       }
@@ -866,15 +871,15 @@
     <div class="toolbar">
       <div class="bar-left">
         <button id="gameBtn" type="button">Start game</button>
-        <div class="sound-stack" id="soundStack">
-          <button id="musicBtn" type="button">Music: off</button>
-          <button id="bouncerBtn" type="button">Bouncer: on</button>
-        </div>
       </div>
       <button class="primary" id="shakeBtn" type="button">Jump</button>
       <div class="pack-stack" id="packStack">
         <button id="addBtn" type="button">Pack’em</button>
         <button id="resetBtn" type="button">Reset</button>
+        <div class="sound-stack" id="soundStack">
+          <button id="musicBtn" type="button">Music: off</button>
+          <button id="bouncerBtn" type="button">Bouncer: on</button>
+        </div>
       </div>
     </div>
 
@@ -4965,10 +4970,11 @@
           // screen"): a button that cannot be used in a state
           // is NOT on the screen in that state. So Reset and
           // Pack’em do not dim for the round — they LEAVE it:
-          // hidden outright, their seats sitting empty (the
-          // phone grid's fixed tracks and the desktop stack's
-          // pinned size hold the bar's shape without them; see
-          // the toolbar CSS). Nothing on the round screen can
+          // hidden outright, their cells sitting empty (the
+          // bar's two grid rows are sized by the buttons
+          // that stay, so the compact bar holds its exact
+          // lobby height without them; see the toolbar
+          // CSS). Nothing on the round screen can
           // add a piece (a round is exactly 15) or settle the
           // pile back to the lobby crowd, because the buttons
           // that do those things are simply not there — and
