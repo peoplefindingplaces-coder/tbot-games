@@ -202,28 +202,36 @@
       @media (min-width: 900px) {
         .brand-logo { top: calc(26px + env(safe-area-inset-top)); }
       }
-      /* The bottom bar, rebuilt TBOT Garden–style (John's
-         order, 2026-10-20: "The bottom is big in the free game
-         part — I want it to be like the TBOT Garden"): a
-         defined-width grid bar centred on the screen — and
-         JUMP dead centre on it at every width (John's order,
-         2026-10-20: "Jump button is supposed to be in the
-         middle for all the PFP games and last TBOT in"). The
-         grid is three tracks — minmax(0,1fr) / auto /
-         minmax(0,1fr) — with JUMP alone in the middle track:
-         the two side tracks always split the leftover width
-         exactly evenly (their content can overflow its track
-         rather than fatten it), so JUMP's centre is the bar's
-         centre is the screen's centre, on a wide monitor and
-         on a phone alike. The seats, one arrangement at every
-         width: Start game top-left, JUMP top-middle, the
-         Reset / Pack’em pair as a short horizontal group on
-         the second row under Start game and JUMP, and the
-         Music / Bouncer pair stacked one over the other in a
-         column spanning both rows at the right end. The
-         physics floor reads this bar's height (floorInset),
-         so the pile re-seats itself above whatever height
-         the bar lands at. */
+      /* The bottom bar — three columns (John's order,
+         2026-10-21: "the bounce and the sound should be
+         underneath the start. The Packham should be on top
+         and a larger button and then the reset underneath
+         as a little smaller" — the arrangement he had right
+         on The Last TBOT In, copied across the board): a
+         defined-width grid bar centred on the screen, three
+         tracks — minmax(0,1fr) / auto / minmax(0,1fr) — with
+         JUMP alone in the middle track: the two side tracks
+         split the leftover width exactly evenly, so JUMP's
+         centre is the bar's centre is the screen's centre,
+         on a wide monitor and on a phone alike. LEFT column:
+         the game face at the top (Start game's gold hero in
+         the lobby; the same button wearing the plain dark
+         End game face mid-round — the two faces share ONE
+         compact box in ONE seat), with the Music / Bouncer
+         stack DIRECTLY UNDERNEATH it, holding that seat in
+         the lobby and mid-round alike. CENTRE: JUMP,
+         enlarged, dead centre. RIGHT column: Pack’em ON TOP
+         as a LARGER button, with Reset DIRECTLY UNDERNEATH
+         it, a little smaller. Mid-round, Pack’em and Reset
+         leave the screen entirely (no greyed buttons — see
+         the locks below) while the left column and JUMP
+         remain, and the full picture returns after the
+         round; the right column's seat is frozen at its
+         lobby size for the round (see startGame), so the
+         bar's height — and the physics floor that reads it
+         (floorInset) — never shifts under the pile. A phone
+         mirrors the same three columns (see the 760px block
+         below). */
       .toolbar {
         position: fixed;
         left: 50%;
@@ -242,32 +250,147 @@
         -webkit-backdrop-filter: blur(12px);
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
       }
-      #gameBtn { grid-column: 1; grid-row: 1; justify-self: start; }
-      #shakeBtn { grid-column: 2; grid-row: 1; justify-self: center; }
-      .pack-stack { grid-column: 1 / 3; grid-row: 2; justify-self: start; }
-      .sound-stack { grid-column: 3; grid-row: 1 / 3; justify-self: end; }
+      /* The left column: the game face at its top, the
+         sound stack directly underneath it — one flex
+         column hugging the bar's left edge. */
+      .left-col {
+        grid-column: 1;
+        justify-self: start;
+        align-self: center;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      /* Start game wears the gold hero face, the same
+         treatment The Last TBOT In's Start wears: a polished
+         gold gradient, a strong dark border, and a warm glow
+         that breathes with a gentle pulse — at the SAME
+         compact size as the End game face (John's orders,
+         2026-10-21: the start button was "ready big" and the
+         end face was still too big after its first shrink, so
+         both faces share one small box, toward the sound
+         switches' scale, and the swap in this seat never
+         changes size). The pulse moves only the glow, never
+         the button's box. The :not(.in-round) guard keeps
+         this off the End game button, and the pulse honours
+         reduced-motion: no motion at all for players who ask
+         for none. */
+      .toolbar:not(.in-round) #gameBtn {
+        font-size: 14.5px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        padding: 8px 10px;
+        width: 114px;
+        min-height: 32px;
+        border-radius: 12px;
+        color: #221a04;
+        background: linear-gradient(180deg, #ffe082 0%, #ffc21f 52%, #eda200 100%);
+        border: 3px solid #14181f;
+        box-shadow:
+          0 10px 28px rgba(240, 165, 0, 0.5),
+          0 4px 10px rgba(20, 24, 31, 0.35),
+          inset 0 2px 0 rgba(255, 255, 255, 0.65),
+          inset 0 -3px 0 rgba(120, 72, 0, 0.35);
+        animation: startPulse 2.4s ease-in-out infinite;
+      }
+      /* End game: Start game's seat at the SAME compact
+         size — plain dark face, no pulse, only Start game
+         wears the gold hero. The face does not move between
+         states: same seat at the top of the left column,
+         same box, same tap — only the face trades. */
+      .toolbar.in-round #gameBtn {
+        font-size: 14.5px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        padding: 8px 10px;
+        width: 114px;
+        min-height: 32px;
+        border-radius: 12px;
+        background: var(--btn-bg);
+        color: var(--btn-ink);
+        border: 3px solid transparent;
+      }
+      @keyframes startPulse {
+        0%, 100% {
+          box-shadow:
+            0 8px 22px rgba(240, 165, 0, 0.42),
+            0 4px 10px rgba(20, 24, 31, 0.35),
+            inset 0 2px 0 rgba(255, 255, 255, 0.65),
+            inset 0 -3px 0 rgba(120, 72, 0, 0.35);
+        }
+        50% {
+          box-shadow:
+            0 14px 36px rgba(240, 165, 0, 0.75),
+            0 6px 14px rgba(20, 24, 31, 0.35),
+            inset 0 2px 0 rgba(255, 255, 255, 0.7),
+            inset 0 -3px 0 rgba(120, 72, 0, 0.35);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .toolbar:not(.in-round) #gameBtn { animation: none; }
+      }
+      #shakeBtn { grid-column: 2; justify-self: center; }
+      .pack-stack { grid-column: 3; justify-self: end; }
       /* The sound pair: Music stacked directly OVER the
-         Bouncer toggle in one short column at the bar's
-         right end (John's order, 2026-10-20: "the music
-         should be over the bouncer — they should be over
-         each other") — the game's two sound switches read
-         as one little group, one atop the other. */
+         Bouncer toggle in one short column (John's order,
+         2026-10-20: "the music should be over the bouncer —
+         they should be over each other"), shrunken compact —
+         the smallest buttons on the bar (John's orders,
+         2026-10-21: "The sound and bounce are too big", then
+         again after the first shrink) — seated DIRECTLY
+         UNDERNEATH the game face in the left column (John's
+         order, 2026-10-21: "the bounce and the sound should
+         be underneath the start"), and holding that seat in
+         the lobby AND mid-round alike: the face above it
+         trades gold for dark, the pair under it never
+         moves. The column stretches both switches to one
+         shared width, and each carries a fixed minimum
+         sized for its longer label ("Music: off", "Bouncer:
+         off"), so flipping a switch never resizes the pair. */
       .sound-stack {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 8px;
+        align-items: stretch;
+        gap: 4px;
       }
-      /* The pile pair: Reset and Pack’em side by side in one
-         short row — two plain buttons next to each other, the
-         way Garden seats its + TBOT / Reset pair. Pack’em
-         keeps the plain button size here now (its old
-         enlarged seat belonged to the tall stacked bar). */
+      .sound-stack button {
+        font-size: 11px;
+        padding: 4px 7px;
+        border-radius: 8px;
+      }
+      #musicBtn { min-width: 80px; }
+      #bouncerBtn { min-width: 90px; }
+      /* The right column: Pack’em ON TOP as a LARGER button
+         — noticeably bigger than the bar's standard buttons,
+         taller and wider with the label scaled up — and
+         Reset DIRECTLY UNDERNEATH it, a little smaller
+         (John's order, 2026-10-21), the two right-aligned
+         to the bar's right end as one flex column. Mid-round
+         the two leave the screen (see .pack-stack.away
+         below) and their column's seat is frozen at its
+         lobby size (see startGame), so nothing else in the
+         bar moves and the bar's height never changes. */
       .pack-stack {
         display: flex;
-        flex-direction: row;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-end;
         gap: 8px;
+        min-width: 0;
+      }
+      #addBtn {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        padding: 15px 24px;
+        border-radius: 14px;
+        min-height: 54px;
+      }
+      #resetBtn {
+        font-size: 15.5px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        min-height: 44px;
       }
       button {
         appearance: none;
@@ -292,18 +415,22 @@
       button.primary.on {
         background: #1d9e50;
       }
-      /* The JUMP button, enlarged: roughly one-and-a-half times a
-         plain button's footprint — taller and wider, label scaled
-         up to match — so it is an easier, more confident tap
-         target mid-round on a phone. */
+      /* The JUMP button, enlarged and enlarged again (John's
+         orders, 2026-10-21: "the jump is too small"): well over
+         one-and-a-half times a plain button's footprint —
+         taller and wider, label scaled up to match — so it is
+         an easier, more confident tap target mid-round on a
+         phone, and the bar's dominant control. It stays the
+         same single accent button in the same middle track,
+         dead centre of the bar at every width. */
       #shakeBtn {
-        font-size: 22px;
+        font-size: 26px;
         font-weight: 800;
         letter-spacing: 0.01em;
-        padding: 17px 26px;
-        border-radius: 16px;
-        min-width: 106px;
-        min-height: 56px;
+        padding: 20px 34px;
+        border-radius: 17px;
+        min-width: 134px;
+        min-height: 68px;
       }
       /* The control buttons NEVER move (John's order,
          2026-10-20 — "Fix control buttons they all seemed to
@@ -311,12 +438,14 @@
          ruling, 2026-10-20: "There should be no greyed out
          buttons — if they're not [usable] they should not
          be on the screen"): every button that stays on
-         screen holds its exact lobby seat AND its exact
-         lobby size for the whole round — Start game / End
-         game at the left edge, JUMP in the middle, the
-         sound pair on the right — and the bar's grid is
-         never re-seated, re-wrapped, or resized. Three
-         locks hold that line:
+         screen holds its exact seat AND its exact size
+         for the whole round — the game face at the top of
+         the left column (Start game gold in the lobby, End
+         game dark mid-round, one seat, one box), the sound
+         pair directly underneath it holding its seat in
+         both states, JUMP dead centre in the middle — and
+         the bar's grid is never re-seated, re-wrapped, or
+         resized. Three locks hold that line:
            1. The buttons whose label flips (Start game /
               End game, Music: on / off, Bouncer: on / off)
               are pinned by the script to the WIDER label's
@@ -337,11 +466,15 @@
               shape in every state and the pile's floor —
               the bar's top edge — never shifts under the
               pieces. */
-      .pack-stack.away button { display: none; }
+      /* Mid-round, ONLY Pack’em and Reset leave — the sound
+         pair under the game face in the left column holds
+         its seat and stays fully usable for the whole
+         round. */
+      .pack-stack.away #addBtn, .pack-stack.away #resetBtn { display: none; }
       .gamehud {
         position: fixed;
         left: 50%;
-        bottom: calc(142px + env(safe-area-inset-bottom));
+        bottom: calc(158px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         display: flex;
         flex-wrap: wrap;
@@ -653,40 +786,70 @@
         .over-best { margin-bottom: 4px; }
         .rate-box { margin-bottom: 3px; }
       }
-      /* Narrow screens: no fold — the bar keeps the one
-         arrangement it has at every width (Start game
-         top-left, JUMP top-middle dead centre, the Reset /
-         Pack’em pair on the second row, Music stacked over
-         Bouncer in its right-end column; on the narrowest
-         phones the sound pair's two buttons trim a touch so
-         the stack stays compact — see the 480px block
-         below). The seats are the same in a round as out of
-         one — no button changes seats when a round starts
-         or ends (John's order, 2026-10-20) — and the HUD
-         offset below keeps the chips clear of the bar's
-         top edge. */
+      /* Phone: the SAME three columns as the desktop bar —
+         no fold, no re-seating: the left column (game face
+         over the compact sound pair), JUMP big and dead
+         centre in the middle track, and the right column
+         (Pack’em large on top, Reset a little smaller
+         underneath). Only the sizes trim a touch so each
+         column stays inside its track on a narrow screen:
+         the face and the pair step down, Pack’em keeps its
+         larger-than-standard presence at a phone scale, and
+         the two side tracks stay equal fractions around the
+         auto middle track, so JUMP's centre is still the
+         bar's centre. The seats are the same in a round as
+         out of one, and the HUD offset below keeps the chips
+         clear of the bar's top edge. */
       @media (max-width: 760px) {
-        .gamehud { bottom: calc(148px + env(safe-area-inset-bottom)); }
+        .toolbar { gap: 6px; }
+        /* The game face keeps the gold hero (and the dark
+           End face in a round) at a phone-compact size, its
+           full label inside the button; the two faces still
+           share the one box. */
+        .toolbar:not(.in-round) #gameBtn,
+        .toolbar.in-round #gameBtn {
+          width: 100px;
+          font-size: 13.5px;
+          letter-spacing: 0.01em;
+          padding: 8px 8px;
+        }
+        /* The sound pair at one fixed small size, labels
+           fully inside. */
+        #musicBtn, #bouncerBtn { min-width: 0; }
+        #musicBtn, #bouncerBtn {
+          width: 96px;
+          height: 22px;
+          font-size: 11px;
+          padding: 4px 6px;
+        }
+        /* Jump stays the big accent target in the middle. */
+        #shakeBtn {
+          font-size: 22px;
+          padding: 16px 24px;
+          border-radius: 16px;
+          min-width: 118px;
+          min-height: 56px;
+        }
+        /* Pack’em stays the larger button on top of the
+           right column; Reset stays a little smaller
+           underneath it. */
+        #addBtn {
+          font-size: 15.5px;
+          padding: 12px 13px;
+          min-height: 48px;
+          border-radius: 13px;
+        }
+        #resetBtn {
+          font-size: 13.5px;
+          padding: 10px 14px;
+          min-height: 38px;
+        }
+        .left-col, .pack-stack { gap: 6px; }
+        /* The HUD lifts clear of the phone bar's height. */
+        .gamehud { bottom: calc(150px + env(safe-area-inset-bottom)); }
       }
       @media (max-width: 480px) {
         button { padding: 11px 13px; font-size: 13.5px; }
-        /* Jump stays ~1.5x the (slightly smaller) phone buttons,
-           still dead centre in the bar's middle track, and the
-           HUD offset keeps the chips clear of the bar's top
-           edge on the narrowest phones. */
-        #shakeBtn {
-          font-size: 20px;
-          padding: 16px 24px;
-          border-radius: 15px;
-          min-width: 102px;
-          min-height: 52px;
-        }
-        /* The sound pair trims a touch at phone width so
-           the stacked Music-over-Bouncer column stays
-           compact in its corner on the narrowest phones. */
-        .sound-stack { gap: 6px; }
-        .sound-stack button { font-size: 13px; padding: 10px 12px; }
-        .gamehud { bottom: calc(144px + env(safe-area-inset-bottom)); }
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
       }
@@ -734,15 +897,17 @@
     </div>
 
     <div class="toolbar">
-      <button id="gameBtn" type="button">Start game</button>
+      <div class="left-col">
+        <button id="gameBtn" type="button">Start game</button>
+        <div class="sound-stack" id="soundStack">
+          <button id="musicBtn" type="button">Music: off</button>
+          <button id="bouncerBtn" type="button">Bouncer: on</button>
+        </div>
+      </div>
       <button class="primary" id="shakeBtn" type="button">Jump</button>
       <div class="pack-stack" id="packStack">
-        <button id="resetBtn" type="button">Reset</button>
         <button id="addBtn" type="button">Pack’em</button>
-      </div>
-      <div class="sound-stack" id="soundStack">
-        <button id="musicBtn" type="button">Music: off</button>
-        <button id="bouncerBtn" type="button">Bouncer: on</button>
+        <button id="resetBtn" type="button">Reset</button>
       </div>
     </div>
 
@@ -4817,13 +4982,23 @@
           packStack.style.width = seatRect.width + "px";
           packStack.style.height = seatRect.height + "px";
           packStack.classList.add("away");
+          // The bar's in-round face: Start game's gold face
+          // trades for the dark End game face in the same seat
+          // at the top of the left column (see .toolbar
+          // .in-round in the style block) — a CSS-only face
+          // swap; the bar's grid, its height and every seat
+          // stay exactly as they were, the sound pair under
+          // the face included.
+          toolbarEl.classList.add("in-round");
           timeLeftMs = GAME_SECONDS * 1000;
           overOverlay.hidden = true;
           gameHud.hidden = false;
           gameBtn.textContent = "End game";
-          // No seat swap: End game keeps Start game's seat at
-          // the bar's left edge and JUMP stays in the middle —
-          // the buttons never move (John's order, 2026-10-20).
+          // End game keeps Start game's seat at the top of
+          // the left column, its size, and the sound pair
+          // directly underneath it — only the face trades
+          // gold for dark — and JUMP stays dead centre: no
+          // button moves (John's order, 2026-10-20).
           // The direction box is out of the started game. It leaves
           // with the round's other Pack’em pieces and the game's
           // name stands alone in the corner instead; endGame brings
@@ -4850,7 +5025,8 @@
           var timeLeft = Math.max(0, Math.min(GAME_SECONDS, Math.ceil(timeLeftMs / 1000)));
           gameOn = false;
           // The round is over: Pack’em gets its pile pair back
-          // on screen — Reset and Pack’em side by side, both
+          // on screen — Pack’em large on top of the right
+          // column, Reset a little smaller underneath it, both
           // working exactly as they always have — and the
           // seat's freeze comes off in the same breath, back
           // to the pair's natural size (the same size it was
@@ -4858,6 +5034,9 @@
           packStack.classList.remove("away");
           packStack.style.width = "";
           packStack.style.height = "";
+          // The game face trades back to the gold Start game
+          // face in the same seat (see startGame).
+          toolbarEl.classList.remove("in-round");
           // The ring eases home: updateHole now winds the drift
           // amplitude down from wherever the round left it, so the
           // ring glides back to dead centre behind the end card —
