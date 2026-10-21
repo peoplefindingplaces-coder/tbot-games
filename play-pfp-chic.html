@@ -3897,8 +3897,13 @@
         // (startRequested): if the clip is still decoding at that
         // moment, playback begins the instant it is ready. Playback is
         // CONFIRMED before the button may say "on": for Web Audio that
-        // means the context is running and its clock is actually
-        // advancing — a start() call alone proves nothing.
+        // means the context is running, its clock is actually
+        // advancing — and the voice is rendering real signal, read
+        // off the analyser the music gain feeds (repair, 2026-10-21:
+        // the clock alone let a voice that had been started into a
+        // suspended/interrupted context read as "on" over silence;
+        // a start() call alone proves nothing, and neither does a
+        // clock with a dead playhead under it).
         // One case the clock check can never prove: a context that
         // RUNS and renders into a muted route. Inside some phone
         // webviews Web Audio rides the ringer/silent switch, so the
@@ -3967,12 +3972,41 @@
             musicPlaying = on;
             setMusicLabel();
           }
-          if (on) musicOutcome = "playing";
+          if (on) { musicOutcome = "playing"; silentVoiceRestarts = 0; }
+        }
+
+        // THE SIGNAL PROOF (repair, 2026-10-21): the RMS level
+        // the song is rendering RIGHT NOW, read off the analyser
+        // the music gain feeds (see ensureCtx). The session's
+        // tracks are loud (mean ≈ −15 dB), so a voice that is
+        // really sounding reads far above MUSIC_SIGNAL_FLOOR; a
+        // voice that was started into a suspended or interrupted
+        // context and never rendered reads a flat 0 — even while
+        // the context's clock advances past it. That dead voice
+        // under a running clock is the false "on" players
+        // reported ("the music is off but it says on — you have
+        // to press off and on to get it to play": the off→on
+        // swing was the manual version of the fresh voice the
+        // proof in verifyClock now starts on its own). Returns
+        // −1 where no analyser exists; there the clock proof
+        // stands alone, as it did before this repair.
+        var MUSIC_SIGNAL_FLOOR = 0.008;
+        var silentVoiceRestarts = 0; // fresh voices tried for the current unconfirmed start
+        function musicSignalLevel() {
+          if (!musicAnalyser) return -1;
+          var n = musicAnalyser.fftSize;
+          var data = new Float32Array(n);
+          try { musicAnalyser.getFloatTimeDomainData(data); }
+          catch (e) { return -1; }
+          var sum = 0;
+          for (var i = 0; i < n; i++) sum += data[i] * data[i];
+          return Math.sqrt(sum / n);
         }
 
         // --- Web Audio engine ---
         var actx = null;        // the AudioContext, once created
         var musicGain = null;   // the song's voices -> gain -> speakers
+        var musicAnalyser = null; // gain -> analyser -> speakers: the signal proof's ear (see musicSignalLevel)
         var musicBuffer = null; // the decoded buffer of the session's seated track
         var bufferFailed = false;
         // Only the session's one seated track is ever fetched
@@ -4012,7 +4046,19 @@
             actx = new AC();
             musicGain = actx.createGain();
             musicGain.gain.value = MUSIC_LEVEL;
-            musicGain.connect(actx.destination);
+            // The gain reaches the speakers THROUGH an analyser,
+            // so the confirmation proof can hear what the engine
+            // is actually rendering (see musicSignalLevel). A
+            // pass-through tap: the sound itself is unchanged.
+            try {
+              musicAnalyser = actx.createAnalyser();
+              musicAnalyser.fftSize = 2048;
+              musicGain.connect(musicAnalyser);
+              musicAnalyser.connect(actx.destination);
+            } catch (e2) {
+              musicAnalyser = null;
+              musicGain.connect(actx.destination);
+            }
             actx.addEventListener("statechange", function () {
               // iOS drops the context to "interrupted"/"suspended"
               // (silent switch, tab switch, call) — the music is no
@@ -4128,23 +4174,61 @@
             });
         }
 
-        // Prove sound is being rendered: the context is running AND
-        // its clock moved since the check was armed. The check
-        // carries the transition token from when it was armed —
-        // if any engine transition has happened since (a
-        // promotion, a stop, a fresh start), the stale check
-        // stands down and says nothing.
+        // Prove sound is being rendered: the context is running,
+        // its clock moved since the check was armed — AND the
+        // voice is rendering real signal (the signal proof,
+        // repair 2026-10-21). The check carries the transition
+        // token from when it was armed — if any engine transition
+        // has happened since (a promotion, a stop, a fresh
+        // start), the stale check stands down and says nothing.
+        // The clock alone used to confirm, and that was the
+        // false "on": a voice started into a suspended or
+        // interrupted context can sit dead while the clock runs
+        // on without it, so the button said "on" over silence
+        // until the player power-cycled the switch by hand.
         function verifyClock() {
           if (!actx || !waLive) return;
           var tk = musicToken;
           var t0 = actx.currentTime;
           setTimeout(function () {
             if (tk !== musicToken) return; // superseded by an engine transition
-            if (waLive && actx.state === "running" && actx.currentTime > t0) {
-              musicEngine = "webaudio";
-              stopElementPair(); // ONE VOICE: Web Audio carries the track alone — the element pair is stopped cold, never a shadow rolling beside it
-              confirmPlaying(true);
-            }
+            if (!waLive || !actx || actx.state !== "running" || actx.currentTime <= t0) return; // not rendering yet — the watchdog holds the verdict
+            // The clock is advancing. Now listen: sample the
+            // rendered signal across a short window and confirm
+            // only on real signal.
+            var peak = -1, samples = 0;
+            var probe = function () {
+              if (tk !== musicToken) return;
+              if (!waLive) return;
+              var lvl = musicSignalLevel();
+              if (lvl > peak) peak = lvl;
+              samples++;
+              if (peak > MUSIC_SIGNAL_FLOOR || peak < 0) {
+                // Real signal — or no analyser in this browser,
+                // where the clock proof above is the only proof
+                // there is and stands as it did before.
+                musicEngine = "webaudio";
+                stopElementPair(); // ONE VOICE: Web Audio carries the track alone — the element pair is stopped cold, never a shadow rolling beside it
+                confirmPlaying(true);
+                return;
+              }
+              if (samples < 4) { setTimeout(probe, 150); return; }
+              // The clock ran a full window and the song rendered
+              // NOTHING: the voice is dead. Do on the spot what
+              // the player's off→on swing did by hand — kill it
+              // and start ONE fresh voice on the running context.
+              // If that one is silent too, Web Audio has had its
+              // chances: hand the song to the element through
+              // the hard handoff.
+              if (silentVoiceRestarts < 1) {
+                silentVoiceRestarts++;
+                stopWebAudio();
+                startWebAudio();
+              } else {
+                promoteElement("silent-voice");
+              }
+            };
+            probe();
           }, 400);
         }
 
@@ -4311,11 +4395,27 @@
             if (musicPlaying && musicEngine === "webaudio") return; // confirmed — nothing to do
             if (!actx || actx.state !== "running") { promoteElement("watchdog"); return; }
             var t0 = actx.currentTime;
+            var s0 = musicSignalLevel();
             setTimeout(function () {
               if (tk !== musicToken) return;
               if (!musicWanted || musicEngine === "element") return;
               if (musicPlaying && musicEngine === "webaudio") return;
-              if (!actx || actx.state !== "running" || actx.currentTime <= t0) promoteElement("watchdog");
+              if (!actx || actx.state !== "running" || actx.currentTime <= t0) { promoteElement("watchdog"); return; }
+              // The clock advanced across the re-proof. If the
+              // analyser hears the song, Web Audio is healthy and
+              // merely unconfirmed (its own proof was superseded
+              // by a transition) — confirm it here. If it hears
+              // nothing at either end of the window, the voice is
+              // dead over a running clock — the false "on" this
+              // repair kills — and the element takes the song.
+              var s1 = musicSignalLevel();
+              if (s1 > MUSIC_SIGNAL_FLOOR) {
+                musicEngine = "webaudio";
+                stopElementPair();
+                confirmPlaying(true);
+                return;
+              }
+              if (s0 >= 0 && s1 >= 0) promoteElement("watchdog");
             }, 450);
           }, 2500);
         }
@@ -4449,6 +4549,7 @@
             decodeFailed: bufferFailed,
             ctxState: actx ? actx.state : "none",
             ctxTime: actx ? actx.currentTime : -1,
+            signal: musicSignalLevel(), // the rendered signal's RMS right now (−1: no analyser in this browser)
             waStartedAgoMs: waStartedAt ? Date.now() - waStartedAt : -1,
             elementLive: elementLive,
             elementMode: elMode,
