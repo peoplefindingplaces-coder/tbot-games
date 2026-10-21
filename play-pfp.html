@@ -3904,8 +3904,8 @@
         // button said "on" over silence until an off→on cycle woke
         // it, and two engines could be heard at once as an echo):
         //  1. EXACTLY ONE audible playhead, ever. Two engines
-        //     exist — a Web Audio looper (primary) and an <audio>
-        //     element pair (fallback) — but they never sound in
+        //     exist — an <audio> element pair (lead) and a Web
+        //     Audio looper (fallback) — but they never sound in
         //     the same moment. The element pair NEVER rolls as a
         //     backup: while Web Audio is the engine, or could
         //     still become it, both elements sit PAUSED. They are
@@ -3948,6 +3948,20 @@
         //     a tap while it is silent — whether the switch stood
         //     on over a blocked autoplay or off — STARTS it,
         //     inside that tap's own gesture.
+        //  7. The label is RECONCILED, not remembered (mirror
+        //     fix, 2026-10-21 — John: the button can also say off
+        //     while the song is playing, and one press must do
+        //     exactly what the label promises, in either
+        //     direction): a 500 ms truth tick reads the engines'
+        //     ground truth — a playhead actually advancing — and
+        //     walks the label to it. Sound under an off label is
+        //     confirmed on without a restart; an on claim over a
+        //     frozen playhead is dropped and the start re-driven
+        //     (at most twice in a row — never a loop). The switch
+        //     itself is label-keyed: a press on "on" stops
+        //     everything; a press on "off" starts the song — or
+        //     adopts an already-sounding one — so no state, in
+        //     either direction, can demand a second press.
         //
         // The music is ON by default in every fresh session
         // (John, 2026-10-21): musicWanted is an in-memory wish,
@@ -3972,6 +3986,20 @@
         // carries Web Audio on the media channel on modern iOS,
         // and the element engine stands behind every failure that
         // CAN be proved (missing, undecodable, stuck, dropped).
+        //
+        // That blind spot is why the ELEMENT PAIR LEADS (fix,
+        // 2026-10-21 — John: "the music is off but it says on;
+        // you have to press off and on to get it to play"): the
+        // pair plays on the media channel — the channel the
+        // player's ears, the bounce voice and every video use —
+        // and its "playing" event certifies a start the clock
+        // proof never could. Web Audio now stands as the
+        // FALLBACK: it gets exactly one shot per start cycle,
+        // only when the element cannot confirm, and if it cannot
+        // prove itself either, the cycle ends honestly silent
+        // (label off) and the next tap starts a fresh cycle —
+        // element first again. The label can therefore never
+        // again read "on" over a song nobody hears.
         var musicWanted = true;   // the player's wish — on by default, off only when the player switches it off
         var startRequested = false; // true once a start has been asked for (load, Start game, first tap, the toggle)
         var musicPlaying = false; // true only once playback is CONFIRMED — the label reads this, never the wish
@@ -3999,7 +4027,7 @@
             musicPlaying = on;
             setMusicLabel();
           }
-          if (on) musicOutcome = "playing";
+          if (on) { musicOutcome = "playing"; disarmElWatchdog(); truthHeals = 0; }
         }
 
         // The music's level, halved (John, 2026-10-19 — "turn
@@ -4303,11 +4331,114 @@
           elCur.muted = false;
           elCur.volume = MUSIC_GAIN;
           var p = elCur.play();
-          if (p && p.catch) p.catch(function () {
+          if (p && p.catch) p.catch(function (err) {
             elementLive = false;
+            // A refusal for want of a tap (NotAllowedError) is
+            // NOT a failure: the pair stays the engine and the
+            // first tap lands the start — the element watchdog
+            // reads this flag and does not fall back over it.
+            if (err && err.name === "NotAllowedError") elGestureBlocked = true;
             if (musicEngine === "element") { confirmPlaying(false); musicOutcome = "silent"; }
           });
           armElSeam();
+        }
+
+        // --- The element pair LEADS (fix, 2026-10-21) ---
+        // tryStartMusic starts the song here first: the pair
+        // plays on the media channel, and its "playing" event
+        // (wireEl) is a confirmation a Web Audio clock advancing
+        // into a muted route can never counterfeit — that
+        // counterfeit is exactly what read "Music: on" over
+        // silence until an off→on cycle woke the song. The
+        // element gets 2.5 s to confirm — the same patience the
+        // Web Audio watchdog has always had — and only a genuine
+        // failure (the play rejected for a real error, the file
+        // missing or undecodable, the element stalled) hands
+        // the start to Web Audio, once, through the fallback
+        // door below. A refusal for want of a gesture
+        // (NotAllowedError) is not a failure: the pair stays the
+        // engine and the first tap lands it (unlockMusicOnGesture).
+        var elWatchdogTimer = null;
+        var elFailedThisCycle = false; // the element had its shot in the current start cycle and could not confirm
+        var elGestureBlocked = false;  // the pair's latest start was refused for want of a tap — it stays the engine
+
+        function armElWatchdog() {
+          disarmElWatchdog();
+          var tok = musicToken;
+          elWatchdogTimer = setTimeout(function () {
+            elWatchdogTimer = null;
+            if (tok !== musicToken) return;
+            if (!musicWanted || musicPlaying || musicEngine !== "element") return;
+            if (elGestureBlocked) return; // no tap yet — the pair keeps the song; the first tap starts it
+            elFailedThisCycle = true;
+            fallBackToWebAudio();
+          }, 2500);
+        }
+        function disarmElWatchdog() {
+          if (elWatchdogTimer) { clearTimeout(elWatchdogTimer); elWatchdogTimer = null; }
+        }
+
+        function startElementLead() {
+          elFailedThisCycle = false;
+          elGestureBlocked = false;
+          musicEngine = "element";
+          elCur = bgMusic; elAlt = bgMusicB;
+          silenceElement(elAlt); // the twin stands by parked
+          startElementEngine();  // its "playing" event confirms
+          armElWatchdog();
+        }
+
+        // The one fallback door, mirror of handoffToElement:
+        // the pair is parked FIRST, and only then does Web
+        // Audio get its single shot at the song — judged by its
+        // own clock proof and watchdog exactly as before, except
+        // that a second failure ends the cycle (enginesExhausted)
+        // instead of handing back to an element that already
+        // failed. Priming (context resume, track decode) happens
+        // in tryStartMusic, so this door never waits on either.
+        function fallBackToWebAudio() {
+          musicToken++;
+          clearElSeam();
+          elementLive = false;
+          silenceElement(bgMusic);
+          silenceElement(bgMusicB);
+          elCur = bgMusic; elAlt = bgMusicB;
+          musicEngine = "none";
+          confirmPlaying(false);
+          if (bufferFailed) { musicOutcome = "silent"; return; } // no decode, no Web Audio road — the pair was the only one
+          if (ensureCtx()) {
+            if (actx.state !== "running") {
+              var rp = actx.resume();
+              if (rp && rp.catch) rp.catch(function () { /* the watchdog settles this start */ });
+            }
+            loadBuffer();
+            if (musicBuffer) startWebAudio();
+            else armWatchdog(); // still decoding — the watchdog covers a decode that never lands
+            return;
+          }
+          musicOutcome = "silent"; // no Web Audio in this browser at all
+        }
+
+        // Both engines had their shot in this cycle and neither
+        // could prove a sound: end the cycle honestly — engines
+        // reset, outcome silent, label off — so the next tap
+        // (the unlock or the switch itself) starts a fresh cycle
+        // with the element leading again, instead of either
+        // engine holding a state the label would have to lie
+        // about.
+        function enginesExhausted() {
+          musicToken++;
+          disarmWatchdog();
+          disarmElWatchdog();
+          stopWebAudio();
+          clearElSeam();
+          elementLive = false;
+          silenceElement(bgMusic);
+          silenceElement(bgMusicB);
+          elCur = bgMusic; elAlt = bgMusicB;
+          musicEngine = "none";
+          confirmPlaying(false);
+          musicOutcome = "silent";
         }
 
         function armElSeam() {
@@ -4362,7 +4493,7 @@
         function handoffToElement() {
           if (!musicWanted) return;
           if (musicEngine === "element") { // already the engine — just make sure it is sounding
-            if (elCur.paused) startElementEngine();
+            if (elCur.paused) { startElementEngine(); armElWatchdog(); }
             else { elCur.muted = false; elCur.volume = MUSIC_GAIN; }
             return;
           }
@@ -4382,6 +4513,7 @@
             var d = elCur.duration;
             try { elCur.currentTime = (isFinite(d) && d > 0) ? pos % d : pos; } catch (e) { /* plays from where it stands */ }
             startElementEngine(); // its "playing" event confirms
+            armElWatchdog();
           };
           if (actx && actx.state === "running") {
             var kicked = false;
@@ -4409,6 +4541,7 @@
             if (tok !== musicToken) return;
             if (!musicWanted) return;
             if (musicPlaying && musicEngine === "webaudio") return; // confirmed — nothing to do
+            if (elFailedThisCycle) { enginesExhausted(); return; } // Web Audio was this cycle's fallback and it failed too — end the cycle honestly instead of handing back to an element that already failed
             handoffToElement();
           }, 2500);
         }
@@ -4458,7 +4591,7 @@
             // was blocked before any gesture, or a stray pause
             // landed) — resume it inside this call, which rides a
             // tap on every path that matters.
-            if (elCur.paused) startElementEngine();
+            if (elCur.paused) { startElementEngine(); armElWatchdog(); }
             return;
           }
           if (waActive) return; // a Web Audio start is already in flight — its clock proof (or the watchdog) settles it
@@ -4468,18 +4601,23 @@
           // straight back to paused — the pair never rolls beside,
           // behind or ahead of the lead.
           blessElements();
-          if (bufferFailed) { handoffToElement(); return; } // decode is hopeless — the element pair is the music
+          // Prime the fallback in the background — context built
+          // and resumed, track decoding — so if the element ever
+          // fails for real, the fallback door never waits on
+          // either. Priming starts NO sound: the context holds no
+          // sources until fallBackToWebAudio launches one.
           if (ensureCtx()) {
             if (actx.state !== "running") {
               var rp = actx.resume();
-              if (rp && rp.catch) rp.catch(function () { /* the watchdog hands over to the element */ });
+              if (rp && rp.catch) rp.catch(function () { /* priming only — the element leads */ });
             }
             loadBuffer();
-            if (musicBuffer) startWebAudio();
-            else armWatchdog(); // still decoding — the watchdog covers a decode that never lands
-            return;
           }
-          handoffToElement(); // no Web Audio in this browser at all
+          // THE ELEMENT PAIR LEADS (fix, 2026-10-21): it plays on
+          // the media channel and its "playing" event is the
+          // confirmation the label reads — Web Audio stands
+          // behind it as the one-shot fallback (startElementLead).
+          startElementLead();
         }
 
         function stopMusic() {
@@ -4495,6 +4633,9 @@
           musicToken++;
           handoffInFlight = false;
           disarmWatchdog();
+          disarmElWatchdog();
+          elFailedThisCycle = false;
+          elGestureBlocked = false;
           stopWebAudio();
           clearElSeam();
           musicEngine = "none";
@@ -4534,7 +4675,7 @@
           if (ev && ev.target === musicBtn) return;
           if (!musicWanted || musicPlaying) return;
           if (musicEngine === "element") { // the element owns the song but could not start before a gesture — this tap is the gesture
-            if (elCur.paused) startElementEngine();
+            if (elCur.paused) { startElementEngine(); armElWatchdog(); }
             return;
           }
           if (actx && actx.state !== "running" && waActive) {
@@ -4560,15 +4701,23 @@
             musicWanted = false;
             stopMusic();
           } else {
-            // The song is NOT sounding — whatever the switch
-            // stood at (on over a blocked autoplay, or off), this
-            // tap STARTS the music, inside this tap's own
-            // gesture. A tap on a silent game never switches
-            // anything off, so the off→on dance the old switch
-            // demanded can never happen again.
+            // The label reads off — whatever the switch stood at
+            // (off over silence, or off while a start was still
+            // in flight), this tap turns the music ON, inside
+            // this tap's own gesture: the press does exactly
+            // what the label promises, so the off→on dance the
+            // old switch demanded can never happen again. If a
+            // song is already sounding under the off label (the
+            // mirror fault), the press ADOPTS it — the label
+            // flips to on, nothing stops, nothing restarts.
             musicWanted = true;
-            setMusicLabel();
-            tryStartMusic();
+            if (actualSoundingNow()) {
+              confirmPlaying(true);
+              setMusicLabel();
+            } else {
+              setMusicLabel();
+              tryStartMusic();
+            }
           }
         });
 
@@ -4586,6 +4735,74 @@
         // tap anywhere. Either way the switch reads the heard
         // truth from the first paint on.
         tryStartMusic();
+
+        // ---------- The truth tick: the label is reconciled ----------
+        // Ground truth, read fresh at every call — never a
+        // remembered event: the element is sounding when it is
+        // unmuted and not paused; Web Audio is sounding when its
+        // looper is live on a running context. If BOTH ever read
+        // sounding (a race the construction forbids), the lead
+        // keeps the song and the looper is stopped on the spot —
+        // the one-voice rule enforced at the reader. The engine
+        // seat is repaired to whichever engine is actually
+        // sounding, so the tick below judges the right playhead.
+        function actualSoundingNow() {
+          var elSound = !elCur.paused && !elCur.muted;
+          var waSound = !!(waActive && actx && actx.state === "running" && waLive.length);
+          if (elSound && waSound) { stopWebAudio(); waSound = false; }
+          if (elSound && musicEngine !== "element") musicEngine = "element";
+          if (waSound && musicEngine !== "webaudio") musicEngine = "webaudio";
+          return elSound || waSound;
+        }
+
+        // Every 500 ms the label is walked to the truth:
+        //  - a song sounding under any label but "on" is
+        //    confirmed on — no restart, no interruption;
+        //  - an "on" claim with nothing sounding is dropped the
+        //    same tick it is seen;
+        //  - an "on" claim whose playhead has not moved for two
+        //    ticks (a stalled element, a frozen context) is
+        //    dropped and the start re-driven once through a
+        //    clean reset — at most two heals in a row, so a
+        //    song that truly cannot play settles honestly off
+        //    (label off, one press starts a fresh cycle) instead
+        //    of churning forever.
+        // Transitions (a handoff in flight) and a switched-off
+        // player are left strictly alone.
+        var truthHeals = 0;      // consecutive re-drives since the last confirmed play
+        var lastSoundPos = -1;   // the owning engine's playhead at the previous tick
+        var stillTicks = 0;      // consecutive ticks with a claimed sound but no playhead movement
+        setInterval(function () {
+          if (handoffInFlight || !musicWanted) { lastSoundPos = -1; stillTicks = 0; return; }
+          var sounding = actualSoundingNow();
+          if (!sounding) {
+            lastSoundPos = -1; stillTicks = 0;
+            if (musicPlaying) confirmPlaying(false); // claimed on, nothing sounding — the label catches down at once
+            return;
+          }
+          var pos = -1;
+          if (musicEngine === "element") pos = elCur.currentTime || 0;
+          else if (musicEngine === "webaudio" && actx) pos = actx.currentTime;
+          if (pos >= 0 && lastSoundPos >= 0 && pos === lastSoundPos) stillTicks++;
+          else stillTicks = 0;
+          lastSoundPos = pos;
+          if (stillTicks >= 2) {
+            // Claimed sound, frozen playhead: an "on" here
+            // would be a lie. Drop it and re-drive the start
+            // through a full reset — element first again.
+            stillTicks = 0; lastSoundPos = -1;
+            confirmPlaying(false);
+            if (truthHeals < 2) {
+              truthHeals++;
+              stopMusic();
+              tryStartMusic();
+            } else {
+              musicOutcome = "silent"; // two re-drives did not take — settle honestly off; one press starts fresh
+            }
+            return;
+          }
+          if (!musicPlaying) confirmPlaying(true); // sound under an off label — the label catches up, nothing restarts
+        }, 500);
 
         // Read-only status for testing: which engine is live, whether
         // playback is confirmed, and the context's state and clock.
@@ -4620,6 +4837,10 @@
             // path may be audible at a time, and audiblePaths
             // proves it.
             token: musicToken,
+            lead: "element",
+            sounding: actualSoundingNow(),
+            elFailed: elFailedThisCycle,
+            elGestureBlocked: elGestureBlocked,
             handoff: handoffInFlight,
             audiblePaths: ((waActive && actx && actx.state === "running") ? 1 : 0) + (elAudible(bgMusic) ? 1 : 0) + (elAudible(bgMusicB) ? 1 : 0),
             seam: "butt-join",
