@@ -1502,22 +1502,63 @@
         // the zero-in card never shows the block. Refresh the
         // slate by editing THIS block only.
         // ================================================================
+        // The 50-entry Detroit plate (2026-10-21) — the verified
+        // list from pfp-restaurants-50-research-20261021.md:
+        // every entry ★4.5+, distances from Great Stay
+        // (3766 Collingwood St), each name linking to the
+        // restaurant's own website. The rotation deals from
+        // all 50.
         var RESTAURANTS = [
-          { name: "BARDA", rating: "4.8", cuisine: "Argentinian steakhouse", dist: "2.7 mi", link: "http://bardadetroit.com/" },
-          { name: "The Congregation", rating: "4.6", cuisine: "Café & cocktail bar", dist: "1.2 mi", link: "http://www.thecongregationdetroit.com/" },
-          { name: "313 Pizza", rating: "4.5", cuisine: "Pizza", dist: "0.5 mi", link: "https://next.order.online/mx-lite?businessId=13047579" },
-          { name: "The Rectory Detroit", rating: "4.5", cuisine: "Pizza", dist: "1.2 mi", link: "https://www.therectorydetroit.com/" },
-          { name: "Baobab Fare", rating: "4.8", cuisine: "East African", dist: "3.0 mi", link: "http://www.baobabfare.com/" },
-          { name: "Selden Standard", rating: "4.9", cuisine: "New American", dist: "4.2 mi", link: "http://www.seldenstandard.com/" },
-          { name: "Chartreuse Kitchen & Cocktails", rating: "4.9", cuisine: "New American", dist: "3.7 mi", link: "http://www.chartreusekc.com/" },
-          { name: "Grey Ghost Detroit", rating: "4.8", cuisine: "New American", dist: "4.7 mi", link: "http://www.greyghostdetroit.com/" },
-          // — Expansion to 12 (2026-10-20): four more verified
-          // ★4.5+ picks, each tagged with the meals it fits;
-          // distances are this home's (Great Stay) figures.
-          { name: "Dime Store", rating: "4.7", cuisine: "Breakfast & brunch", meals: "Brunch · Lunch", dist: "6.0 mi", link: "https://www.eatdimestore.com/detroit/" },
-          { name: "Supino Pizzeria", rating: "4.7", cuisine: "Pizza", meals: "Lunch · Dinner", dist: "5.7 mi", link: "http://www.supinopizzeria.com/" },
-          { name: "SavannahBlue", rating: "4.5", cuisine: "Soul food / Southern", meals: "Dinner", dist: "5.6 mi", link: "http://savannahbluedetroit.com/" },
-          { name: "Parc", rating: "4.5", cuisine: "American bistro", meals: "Brunch · Lunch · Dinner", dist: "6.0 mi", link: "http://parcdetroit.com/" }
+          { name: "BARDA", rating: "4.8", cuisine: "Argentinian", dist: "2.7 mi", link: "https://bardadetroit.com" },
+          { name: "The Congregation", rating: "4.6", cuisine: "Café & cocktail bar", dist: "1.4 mi", link: "https://thecongregationdetroit.com" },
+          { name: "313 Pizza", rating: "4.5", cuisine: "Detroit-style pizza", dist: "2.2 mi", link: "https://313pizza.co" },
+          { name: "The Rectory Detroit", rating: "4.5", cuisine: "Wood-fired neighborhood restaurant", dist: "1.4 mi", link: "https://therectorydetroit.com" },
+          { name: "Baobab Fare", rating: "4.8", cuisine: "East African", dist: "2.3 mi", link: "https://baobabfare.com" },
+          { name: "Selden Standard", rating: "4.9", cuisine: "New American, wood-fired", dist: "3.2 mi", link: "https://seldenstandard.com" },
+          { name: "Chartreuse Kitchen & Cocktails", rating: "4.9", cuisine: "French-inspired New American", dist: "2.7 mi", link: "https://chartreusekc.com" },
+          { name: "Grey Ghost Detroit", rating: "4.8", cuisine: "Steakhouse / cocktail bar", dist: "3.0 mi", link: "https://greyghostdetroit.com" },
+          { name: "Dime Store", rating: "4.7", cuisine: "Brunch diner", dist: "4.0 mi", link: "https://eatdimestore.com/detroit/" },
+          { name: "Supino Pizzeria", rating: "4.7", cuisine: "Pizza", dist: "3.6 mi", link: "https://supinopizzeria.com" },
+          { name: "SavannahBlue", rating: "4.5", cuisine: "Southern / soul food", dist: "4.0 mi", link: "https://savannahbluedetroit.com" },
+          { name: "Parc", rating: "4.5", cuisine: "Contemporary American", dist: "4.2 mi", link: "https://parcdetroit.com" },
+          { name: "London Chop House", rating: "4.8", cuisine: "Classic steakhouse", dist: "6.0 mi", link: "https://thelondonchophouse.com" },
+          { name: "Caucus Club", rating: "4.7", cuisine: "Classic American steakhouse", dist: "6.0 mi", link: "https://caucusclubdetroit.com" },
+          { name: "Prime + Proper", rating: "4.6", cuisine: "Steakhouse", dist: "5.8 mi", link: "https://primeandproperdetroit.com" },
+          { name: "Joe Muer Seafood", rating: "4.6", cuisine: "Seafood", dist: "6.4 mi", link: "https://joemuer.com" },
+          { name: "The Apparatus Room", rating: "4.6", cuisine: "New American", dist: "6.0 mi", link: "https://detroitfoundationhotel.com/dine/apparatus-room/" },
+          { name: "Standby", rating: "4.8", cuisine: "New American / cocktail bar", dist: "5.8 mi", link: "https://standbydetroit.com" },
+          { name: "Texas de Brazil", rating: "4.6", cuisine: "Brazilian steakhouse", dist: "5.9 mi", link: "https://texasdebrazil.com" },
+          { name: "Leila", rating: "4.5", cuisine: "Lebanese / Middle Eastern", dist: "5.7 mi", link: "https://leiladetroit.com" },
+          { name: "Marrow in the Market", rating: "4.6", cuisine: "Butcher-driven New American", dist: "5.7 mi", link: "https://marrowinthemarket.com" },
+          { name: "Bar Pigalle", rating: "4.5", cuisine: "French brasserie", dist: "4.9 mi", link: "https://barpigalle.com" },
+          { name: "Freya", rating: "4.7", cuisine: "New American tasting menus", dist: "3.4 mi", link: "https://freyadetroit.com" },
+          { name: "The Whitney", rating: "4.5", cuisine: "American fine dining", dist: "4.2 mi", link: "https://thewhitney.com" },
+          { name: "Cliff Bell's", rating: "4.5", cuisine: "Jazz club & American restaurant", dist: "5.4 mi", link: "https://cliffbells.com" },
+          { name: "Golden Fleece", rating: "4.6", cuisine: "Greek", dist: "6.0 mi", link: "https://goldenfleecedetroit.com" },
+          { name: "Firebird Tavern", rating: "4.6", cuisine: "American tavern", dist: "5.9 mi", link: "https://firebirdtavern.com/detroit" },
+          { name: "Ottava Via", rating: "4.7", cuisine: "Italian", dist: "5.0 mi", link: "https://ottavaviadetroit.com" },
+          { name: "Green Dot Stables", rating: "4.6", cuisine: "Sliders / American", dist: "5.5 mi", link: "https://greendotstables.com" },
+          { name: "Mercury Burger Bar", rating: "4.5", cuisine: "Burgers / American", dist: "4.7 mi", link: "https://mercuryburgerbar.com" },
+          { name: "Vicente's Cuban Cuisine", rating: "4.6", cuisine: "Cuban", dist: "5.8 mi", link: "https://vicentesdetroit.com" },
+          { name: "Polish Village Cafe", rating: "4.8", cuisine: "Polish", dist: "4.4 mi", link: "https://polishvillage.cafe" },
+          { name: "Queens", rating: "4.8", cuisine: "Neighborhood bar & kitchen", dist: "5.7 mi", link: "https://queensbardetroit.com" },
+          { name: "Louie's Ham and Corned Beef", rating: "4.5", cuisine: "Deli / breakfast", dist: "5.2 mi", link: "https://louieshamatmac.com" },
+          { name: "Cork & Gabel", rating: "4.7", cuisine: "German-Italian", dist: "4.6 mi", link: "https://corkandgabel.com" },
+          { name: "SheWolf Pastificio & Bar", rating: "4.8", cuisine: "Italian pastificio", dist: "4.3 mi", link: "https://shewolfdetroit.com" },
+          { name: "Flowers of Vietnam", rating: "4.8", cuisine: "Vietnamese", dist: "4.9 mi", link: "https://flowersofvietnam.com" },
+          { name: "El Asador Steakhouse", rating: "4.7", cuisine: "Mexican steakhouse", dist: "5.9 mi", link: "https://elasadordetroit.com" },
+          { name: "Evie's Tamales", rating: "4.7", cuisine: "Mexican tamales / breakfast", dist: "4.9 mi", link: "https://eviestamales.com" },
+          { name: "Slows Bar BQ", rating: "4.5", cuisine: "BBQ", dist: "4.7 mi", link: "https://slowsbarbq.com" },
+          { name: "Mudgie's", rating: "4.7", cuisine: "Deli / wine bar", dist: "5.4 mi", link: "https://mudgiesdeli.com" },
+          { name: "Takoi", rating: "4.9", cuisine: "Thai-inspired", dist: "4.5 mi", link: "https://takoidetroit.com" },
+          { name: "Mink", rating: "4.9", cuisine: "Seafood / small plates", dist: "5.2 mi", link: "https://minkdetroit.com" },
+          { name: "Grandma Bob's Pizza", rating: "4.6", cuisine: "Pizza / American", dist: "4.7 mi", link: "https://grandmabobs.com" },
+          { name: "The Sugar House", rating: "4.6", cuisine: "Cocktail bar & small plates", dist: "4.7 mi", link: "https://sugarhousedetroit.com" },
+          { name: "Ima Izakaya", rating: "4.6", cuisine: "Japanese izakaya / ramen", dist: "4.7 mi", link: "https://imanoodles.com" },
+          { name: "Oak & Reel", rating: "4.7", cuisine: "Italian seafood", dist: "3.4 mi", link: "https://oakandreel.com" },
+          { name: "Pie-Sci Pizza", rating: "4.5", cuisine: "Pizza", dist: "3.2 mi", link: "https://piescipizza.com" },
+          { name: "Cuisine", rating: "4.8", cuisine: "French-American", dist: "2.8 mi", link: "https://cuisinerestaurant.com" },
+          { name: "Dakota Inn", rating: "4.6", cuisine: "German rathskeller", dist: "3.8 mi", link: "https://dakota-inn.com" }
         ];
 
         // ================================================================
