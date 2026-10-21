@@ -1549,6 +1549,89 @@
         // seats this session's track as the music element's
         // source.
 
+        // ---------- IndexedDB seat store ----------
+        // A third copy of each rotation seat, in IndexedDB —
+        // the seat's durable memory. Contexts exist (in-app
+        // webviews above all) where BOTH halves of the dual
+        // store (localStorage + cookie) work perfectly during
+        // a visit yet are wiped between visits, while
+        // IndexedDB survives: there, the dual store alone can
+        // never carry a seat from one visit to the next.
+        // IndexedDB is asynchronous, so its reads land a
+        // moment after load; seatRotation below seats
+        // provisionally from the dual store and then lets the
+        // IndexedDB answer re-seat the session (through the
+        // caller's reseat callback) when it holds a position
+        // the dual store had lost. Every helper fails soft:
+        // no IndexedDB, a blocked open, a dead transaction —
+        // all read as "unavailable" and the seat carries on
+        // without it. Read callback values: a string is a hit,
+        // null is a clean miss (the database answered and
+        // holds nothing), undefined is unavailable / errored.
+        function seatIdbOpen(cb) {
+          var idb = window.indexedDB;
+          if (!idb) { cb(null); return; }
+          var req;
+          try { req = idb.open("pfpSeatStore", 1); } catch (e) { cb(null); return; }
+          req.onupgradeneeded = function () {
+            try { req.result.createObjectStore("seats"); } catch (e) { /* store already there */ }
+          };
+          req.onsuccess = function () { cb(req.result); };
+          req.onerror = function () { cb(null); };
+          req.onblocked = function () { cb(null); };
+        }
+        function seatIdbRead(key, cb) {
+          seatIdbOpen(function (db) {
+            if (!db) { cb(undefined); return; }
+            var done = false;
+            function finish(v) {
+              if (done) return;
+              done = true;
+              try { db.close(); } catch (e) { /* already closed */ }
+              cb(v);
+            }
+            try {
+              var tx = db.transaction("seats", "readonly");
+              var rq = tx.objectStore("seats").get(key);
+              rq.onsuccess = function () { finish(rq.result == null ? null : String(rq.result)); };
+              rq.onerror = function () { finish(undefined); };
+            } catch (e) { finish(undefined); }
+          });
+        }
+        function seatIdbWrite(key, value) {
+          seatIdbOpen(function (db) {
+            if (!db) return;
+            try {
+              var tx = db.transaction("seats", "readwrite");
+              tx.objectStore("seats").put(String(value), key);
+              tx.oncomplete = function () { try { db.close(); } catch (e) { /* already closed */ } };
+              tx.onerror = function () { try { db.close(); } catch (e) { /* already closed */ } };
+            } catch (e) {
+              try { db.close(); } catch (e2) { /* already closed */ }
+            }
+          });
+        }
+
+        // The no-store fallback seat, de-aliased (2026-10-21):
+        // the old scatter was a pure function of the wall
+        // clock, so loads at the same time of day — or the
+        // same offset into every hour — hashed back to the
+        // SAME seat, visit after visit: a fallback that dealt
+        // one fixed song while looking random. The scatter
+        // now mixes a fresh random draw into the clock and
+        // the page timer before the multiplicative hash, so
+        // no pattern of visit times can alias two loads onto
+        // the same seat.
+        function scatterSeat(n) {
+          var t = Date.now();
+          var p = (typeof performance !== "undefined" ? performance.now() * 1000 : 0);
+          var r = Math.floor(Math.random() * 4294967296);
+          var x = (Math.floor(t) ^ Math.floor(p) ^ r) >>> 0;
+          x = ((x * 2654435761) % 4294967296) >>> 0;
+          x = (x ^ (x >>> 15)) >>> 0;
+          return Math.floor(x / 4294967296 * n) % n;
+        }
+
         // ---------- Rotation seat (shared by photos + tracks) ----------
         // Seats one position in a rotating list for this session
         // and stores the NEXT position, so consecutive visits run
@@ -1576,19 +1659,80 @@
         // changes — strict list order, exactly as before, first
         // visit at the top of the list. Either way the seat is
         // taken once per load and held for the whole session.
-        function seatRotation(key, n) {
+        //
+        // The between-visits repair (2026-10-21): the verify
+        // above only catches a store that fails ON THE SPOT —
+        // its write/read-back test runs inside one visit. A
+        // store that works during the visit but is wiped
+        // BETWEEN visits (the in-app webview pattern) passes
+        // that test every time, so every visit still posed as
+        // a first visit and dealt position 0 — "Stay" on every
+        // visit, forever. The seat now keeps its position in
+        // IndexedDB as well (see the seat store above), a
+        // store that survives where the dual store does not:
+        //   · Dual-store hit, verified: seat it, exactly as
+        //     before, and mirror the next position into
+        //     IndexedDB to keep the durable copy in step.
+        //   · Dual-store miss (or a write that won't stick):
+        //     seat provisionally, then ask IndexedDB. A hit
+        //     there is the real seat — the session re-seats
+        //     on it through the caller's reseat callback, and
+        //     the next position is stored in BOTH stores.
+        //   · No durable seat anywhere — IndexedDB holds
+        //     nothing either (a first visit in every store,
+        //     or a context that wipes IndexedDB along with
+        //     the dual store), or IndexedDB itself is
+        //     unavailable: the seat falls to the de-aliased
+        //     scatter (see scatterSeat above) instead of
+        //     pinning to the top of the list, and the next
+        //     position is planted in every store — so a
+        //     device whose stores live joins the strict
+        //     tour from its second visit on, and a device
+        //     where no store ever survives still hears a
+        //     different song from visit to visit.
+        // The reseat lands within moments of load — long
+        // before any tap can start the music — and the track
+        // reseat additionally refuses to move a session whose
+        // music has already been asked for (one song per
+        // session stands; the stored next position has
+        // already advanced, so the NEXT visit rotates).
+        function seatRotation(key, n, reseat) {
           var stored = parseInt(storeRead(key), 10);
           var have = !isNaN(stored) && stored >= 0;
           var idx = have ? stored % n : 0;
           var next = String((idx + 1) % n);
           storeWrite(key, next);
-          if (storeRead(key) !== next) {
-            if (n > 1) {
-              var t = Date.now() + (typeof performance !== "undefined" ? performance.now() * 1000 : 0);
-              idx = Math.floor(((t * 2654435761) % 4294967296) / 4294967296 * n) % n;
-            }
-            storeWrite(key, String((idx + 1) % n));
+          var sticks = storeRead(key) === next;
+          if (have && sticks) {
+            seatIdbWrite(key, next); // keep the durable copy in step for the day this store dies
+            return idx;
           }
+          seatIdbRead(key, function (val) {
+            if (typeof val === "string") {
+              var iv = parseInt(val, 10);
+              if (!isNaN(iv) && iv >= 0) {
+                var i2 = iv % n;
+                var n2 = String((i2 + 1) % n);
+                storeWrite(key, n2);
+                seatIdbWrite(key, n2);
+                if (i2 !== idx && reseat) reseat(i2);
+                return;
+              }
+            }
+            // No durable seat anywhere: scatter this visit's
+            // seat (de-aliased — see scatterSeat) so it can
+            // never pin to position 0, and plant the next
+            // position in every store for the visit after.
+            if (n > 1) {
+              var si = scatterSeat(n);
+              var n3 = String((si + 1) % n);
+              storeWrite(key, n3);
+              seatIdbWrite(key, n3);
+              if (si !== idx && reseat) reseat(si);
+            } else {
+              seatIdbWrite(key, next);
+            }
+          });
           return idx;
         }
 
@@ -1603,7 +1747,17 @@
         (function seatPhoto() {
           var n = SKIN.PHOTOS.length;
           if (!n) return;
-          photoIndex = seatRotation(PHOTO_POS_KEY, n);
+          photoIndex = seatRotation(PHOTO_POS_KEY, n, function (i2) {
+            // The durable store held a seat the dual store had
+            // lost (see seatRotation): re-seat this session's
+            // photo on it — the background swaps to the carried
+            // photo, moments after load, before the seated
+            // photo has even finished arriving.
+            photoIndex = i2;
+            skinPhoto = SKIN.PHOTOS[i2];
+            canvas.style.backgroundImage =
+              'linear-gradient(var(--stage-photo-dim), var(--stage-photo-dim)), url("' + skinPhoto + '")';
+          });
         })();
         var skinPhoto = SKIN.PHOTOS.length ? SKIN.PHOTOS[photoIndex] : "";
         canvas.style.backgroundImage =
@@ -1617,9 +1771,11 @@
         // load seats TRACKS[position] as the session's one song
         // and stores the next position, so consecutive visits
         // run through the list in order and wrap around to the
-        // top — and where the store does not stick, the clock
-        // fallback seats a different song anyway instead of
-        // pinning every visit to the first track. Within the
+        // top — and where the dual store dies between visits,
+        // the seat's IndexedDB copy (see seatRotation) carries
+        // the tour across anyway, with the de-aliased scatter
+        // behind it, instead of pinning every visit to the
+        // first track. Within the
         // session the seated song is the ONLY song: both music
         // engines loop it at every seam (see the music block
         // below) and nothing ever steps to another track
@@ -1633,7 +1789,25 @@
         (function seatTrack() {
           var n = SKIN.TRACKS.length;
           if (!n) return;
-          trackIndex = seatRotation(TRACK_POS_KEY, n);
+          trackIndex = seatRotation(TRACK_POS_KEY, n, function (i2) {
+            // The durable store held a seat the dual store had
+            // lost (see seatRotation): re-seat this session's
+            // song on it — every music reader follows (the
+            // element's source, the backup element, the Web
+            // Audio buffer pick, the play index). One guard:
+            // if the music has already been asked for, the
+            // session keeps the song it started with (one
+            // song per session) — the stored seat has already
+            // advanced, so the NEXT visit takes this one.
+            if (startRequested || musicPlaying) return;
+            trackIndex = i2;
+            playIndex = i2;
+            skinTrack = SKIN.TRACKS[i2];
+            bgMusic.src = skinTrack;
+            if (elB) elB.src = skinTrack;
+            elTrackIndex = i2;
+            musicBuffer = playBuffers[i2] || null;
+          });
         })();
         var skinTrack = SKIN.TRACKS.length ? SKIN.TRACKS[trackIndex] : "";
         bgMusic.src = skinTrack;
@@ -1650,7 +1824,11 @@
         function noteTrackStarted(i) {
           playIndex = i;
           var n = SKIN.TRACKS.length;
-          if (n > 0) storeWrite(TRACK_POS_KEY, String((i + 1) % n));
+          if (n > 0) {
+            var np = String((i + 1) % n);
+            storeWrite(TRACK_POS_KEY, np);
+            seatIdbWrite(TRACK_POS_KEY, np); // the durable copy stays in step with the dual store
+          }
         }
 
         // ---------- Eats rotation ----------
@@ -1662,13 +1840,64 @@
         // the next pick — repeat players see different picks
         // across finished rounds. Zero-in rounds never reach
         // showEvent, so they neither show nor advance a pick.
-        var EATS_POS_KEY = "pfpEatsPos";
+        //
+        // The seat key is PER HOME (the "StylishStay" suffix),
+        // like the track seat's: every PFP edition is served
+        // from the same origin, so the old shared key
+        // ("pfpEatsPos") let one home's visits move another
+        // home's seat. A position already stored under the old
+        // shared key is migrated to the per-home key on the
+        // first load that needs it, so a returning player's
+        // place in the list carries over.
+        //
+        // The storage-blocked repair (2026-10-21) — the same
+        // protection seatRotation gives the photos and the
+        // tracks, which this seat never had: the old seat read
+        // a bare store miss as position 0, so where the dual
+        // store does not survive between visits — the game
+        // opened inside an in-app webview, cleared or
+        // partitioned site data — every visit's first winning
+        // card dealt the first restaurant on the list, visit
+        // after visit. The seat now VERIFIES its store the way
+        // seatRotation does: it writes the seated position back
+        // and reads it straight back, and where the read-back
+        // misses, the store is not sticking, so the seat falls
+        // back to seatRotation's moment hash (the wall clock
+        // mixed with the page's high-resolution timer, scattered
+        // by a multiplicative hash) and each visit starts
+        // somewhere different in the list instead of at the top.
+        // Where the store does stick, nothing changes — strict
+        // list order, first visit at the top of the list.
+        var EATS_POS_KEY = "pfpEatsPosStylishStay";
         var eatsIndex = 0;
         (function seatEats() {
           var n = SKIN.RESTAURANTS.length;
           if (!n) return;
-          var stored = parseInt(storeRead(EATS_POS_KEY), 10);
-          if (!isNaN(stored) && stored >= 0) eatsIndex = stored % n;
+          var raw = storeRead(EATS_POS_KEY);
+          if (raw === null) {
+            // First load under the per-home key: migrate the
+            // place this device already holds under the old
+            // shared key, if it holds one.
+            raw = storeRead("pfpEatsPos");
+            if (raw !== null) storeWrite(EATS_POS_KEY, raw);
+          }
+          var stored = parseInt(raw, 10);
+          var have = !isNaN(stored) && stored >= 0;
+          eatsIndex = have ? stored % n : 0;
+          // Verify the store sticks, exactly as seatRotation
+          // does: write the seated position back and read it
+          // straight back. A miss means the store will not
+          // survive to the next visit either, so scatter this
+          // visit's seat by the moment hash instead of dealing
+          // from the top of the list again.
+          storeWrite(EATS_POS_KEY, String(eatsIndex));
+          if (storeRead(EATS_POS_KEY) !== String(eatsIndex)) {
+            if (n > 1) {
+              var t = Date.now() + (typeof performance !== "undefined" ? performance.now() * 1000 : 0);
+              eatsIndex = Math.floor(((t * 2654435761) % 4294967296) / 4294967296 * n) % n;
+            }
+            storeWrite(EATS_POS_KEY, String(eatsIndex));
+          }
         })();
 
         var W = 0, H = 0, DPR = 1;
@@ -5218,10 +5447,12 @@
         // Read-only status for testing: the skin this edition
         // renders — photo list, the photo the rotation seated
         // for this session (and its index), track list, the
-        // track the rotation seated (and its index), and
-        // property name — straight from the SKIN block.
+        // track the rotation seated (and its index), the
+        // restaurant count and the eats seat's current pick
+        // (and its index), and property name — straight from
+        // the SKIN block.
         window.PFPSkin = function () {
-          return { propertyName: SKIN.PROPERTY_NAME, photo: skinPhoto, photos: SKIN.PHOTOS.slice(), photoIndex: photoIndex, tracks: SKIN.TRACKS.slice(), music: skinTrack, trackIndex: trackIndex, scene: skinPhoto };
+          return { propertyName: SKIN.PROPERTY_NAME, photo: skinPhoto, photos: SKIN.PHOTOS.slice(), photoIndex: photoIndex, tracks: SKIN.TRACKS.slice(), music: skinTrack, trackIndex: trackIndex, scene: skinPhoto, restaurants: SKIN.RESTAURANTS.length, eatsIndex: eatsIndex, eatsPick: SKIN.RESTAURANTS.length ? SKIN.RESTAURANTS[eatsIndex % SKIN.RESTAURANTS.length].name : null };
         };
 
         // ---------- Go ----------
