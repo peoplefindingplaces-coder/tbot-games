@@ -489,7 +489,7 @@
       /* Taller viewports (windows over ~900px tall): the
          stepped-down tier below lets go and the card takes its
          full grand sizes — in its fullest state (four-line prize
-         plate, result, rank, Top-10 status, best, stars, both
+         plate, result, rank, competition status, best, stars, both
          buttons, the enlarged eats plate just above them) it
          measures ~855px with the bigger plate,
          which fits those windows inside the one-screen guard
@@ -628,13 +628,14 @@
         margin: 2px 0 8px;
       }
       .over-badge[hidden] { display: none; }
-      /* The Top-10 status line, under the rank line and its
-         gold badge pill: the teaching line only, shown when
-         the rank misses the Top 10 — a Top-10 finish shows no
-         (the earned early check-in line came off the card,
-         2026-10-19). It renders only when the scorebook is
-         enabled and a rank was read (see endGame / showRank) —
-         while the scorebook is disabled it never appears. */
+      /* The competition status line, under the rank line and
+         its gold badge pill: the competition section's display
+         line, in John's exact words (2026-10-21) — the Top 5
+         takes the 3pm check-in prize. It shows whenever a real
+         rank was read for a scoring round (see showRank), for
+         the Top-5 finishers who earned it and for everyone
+         below them aiming at it alike. While the scorebook is
+         disabled, or before a rank loads, it never appears. */
       .over-status {
         font-size: 15.5px;
         font-weight: 700;
@@ -642,6 +643,54 @@
         margin: 0 0 8px;
       }
       .over-status[hidden] { display: none; }
+      /* Link-buttons: anchors that wear the plain button face
+         — the family style The Last TBOT In's card links use. */
+      a.btnlink {
+        display: inline-block;
+        text-decoration: none;
+        font-size: 14.5px;
+        font-weight: 700;
+        padding: 11px 16px;
+        border-radius: 12px;
+        background: var(--btn-bg);
+        color: var(--btn-ink);
+        line-height: 1;
+        white-space: nowrap;
+      }
+      a.btnlink.primary { background: var(--accent); color: var(--accent-ink); }
+      a.btnlink[hidden] { display: none; }
+      /* The competition entry button — the SAME button The
+         Last TBOT In wears (John's order, 2026-10-21): one
+         full-width link directly under the rank line, its
+         gold badge pill, and the competition display line.
+         A tap makes a picture of this winner card, offers it
+         through the share sheet (or downloads it where
+         sharing files is not available), and opens the
+         @TBOTgamevr DMs so the player can send the picture
+         as their entry (see the competition block in the
+         script). It wears the same medium size as TBOT's so
+         the whole card still fits one screen. */
+      .over-card a.over-compete {
+        display: block;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.15;
+        text-align: center;
+        text-decoration: none;
+        white-space: normal;
+        padding: 10px 14px;
+        min-height: 42px;
+        border-radius: 14px;
+        margin: 2px 0 10px;
+      }
+      /* The button's second line, exactly as TBOT's: the
+         "Competition" label stands on its own line and
+         "Screenshot & upload here" sits directly under it —
+         two stacked lines, never one long line that
+         overflows the card. */
+      .over-card a.over-compete .compete-sub {
+        display: block;
+      }
       .over-best {
         font-size: 13px;
         font-weight: 600;
@@ -702,7 +751,7 @@
       /* Shorter viewports (phones up to ~900px tall — the
          390×844 class and the SE-class ~667px screens alike,
          small Androids, short laptop windows): the fullest card
-         — a long prize plate, the result, rank, and Top-10
+         — a long prize plate, the result, rank, and competition
          status lines, and the enlarged eats plate just above
          the buttons — measures ~855px
          at the full sizes above, which only fits windows ~880px
@@ -735,6 +784,7 @@
         .over-rank { font-size: 19px; margin-bottom: 2px; }
         .over-badge { margin: 1px 0 3px; padding: 5px 16px; }
         .over-status { line-height: 1.25; margin-bottom: 3px; }
+        .over-card a.over-compete { margin: 1px 0 4px; }
         .over-best { margin-bottom: 4px; }
         .rate-box { margin-bottom: 3px; }
         .rate-label { margin-bottom: 2px; }
@@ -896,6 +946,7 @@
         <p class="over-rank" id="rankLine" hidden></p>
         <p class="over-badge" id="badgeLine" hidden></p>
         <p class="over-status" id="statusLine" hidden></p>
+        <a class="btnlink over-compete" id="competeBtn" href="https://ig.me/m/tbotgamevr" target="_blank" rel="noopener">Competition<span class="compete-sub">Screenshot &amp; upload here</span></a>
         <p class="over-best" id="bestLine"></p>
 
         <div class="rate-box">
@@ -952,6 +1003,7 @@
         var rankLine = document.getElementById("rankLine");
         var badgeLine = document.getElementById("badgeLine");
         var statusLine = document.getElementById("statusLine");
+        var competeBtn = document.getElementById("competeBtn");
         var bestLine = document.getElementById("bestLine");
         var codeLabel = document.getElementById("codeLabel");
         var codeValue = document.getElementById("codeValue");
@@ -1579,7 +1631,7 @@
         // and the winner card reads the book back to rank the
         // player. Should the endpoint ever be emptied again, the
         // whole pipe goes quiet with it: no posts, no reads, and
-        // the card omits the rank and Top-10 status lines.
+        // the card omits the rank and competition status lines.
         // ================================================================
         var SCOREBOOK = {
           endpoint: "https://docs.google.com/forms/d/e/1FAIpQLSexAa6SHa4jgCiaeA4vnd2XbZAf8zAZk4YN-bSB04-0Vtb8Cg/formResponse",
@@ -4827,14 +4879,17 @@
           return "";
         }
 
-        // Paint the rank line, the gold badge pill under it, and,
-        // below a Top-10 finish, the Top-10 teaching line. A
-        // Top-10 finish gets no status line at all — the earned
-        // early check-in line came off the card (John's ruling,
-        // 2026-10-19); the rank line alone carries the result. A
-        // zero-in round crowns nothing, so its status line stays
-        // hidden too — and the badge only ever paints here, with
-        // a real rank, so a zero-in card never gets one.
+        // Paint the rank line, the gold badge pill under it, and
+        // the competition section's display line — John's exact
+        // words (2026-10-21): "Top 5!! Win a 3pm check in if
+        // available." The Top 5 now takes the 3pm check-in
+        // prize (superseding the old Top-10 line), and the
+        // display line shows for every scoring round's real
+        // rank — the Top-5 finishers who earned it and everyone
+        // below them aiming at it alike. A zero-in round crowns
+        // nothing, so its status line stays hidden — and the
+        // badge only ever paints here, with a real rank, so a
+        // zero-in card never gets one.
         function showRank(scores) {
           var r = computeRank(scores);
           rankLine.classList.remove("note");
@@ -4849,9 +4904,9 @@
           } else {
             badgeLine.hidden = true;
           }
-          if (postedRound.itemsIn > 0 && r.rank > 10) {
+          if (postedRound.itemsIn > 0) {
             statusLine.hidden = false;
-            statusLine.textContent = "Finish in the Top 10 to earn early check-in at 3 PM, if available.";
+            statusLine.textContent = "Top 5!! Win a 3pm check in if available.";
           } else {
             statusLine.hidden = true;
           }
@@ -5579,6 +5634,221 @@
             count: RESTAURANTS.length
           };
         };
+
+        // ---------- The competition entry picture ----------
+        // The same competition button The Last TBOT In wears
+        // (John's order, 2026-10-21): tapping it makes a
+        // PICTURE of this winner card for the competition.
+        // The tap does three things:
+        //   1. It draws the card — the winning event's name on
+        //      its navy plate, the result line, the rank line,
+        //      the gold badge, and the competition display
+        //      line ("Top 5!! Win a 3pm check in if
+        //      available.") — onto an offscreen canvas and
+        //      turns it into a PNG image.
+        //   2. On devices that can share files, the picture
+        //      opens in the share sheet so the player can send
+        //      it; where file sharing is not available, the
+        //      picture downloads to the device instead.
+        //   3. It opens the competition DM (the link's own
+        //      href, https://ig.me/m/tbotgamevr) in a new tab,
+        //      so the player can send the picture to
+        //      @TBOTgamevr as their entry.
+        // Instagram takes no message from a game on a player's
+        // behalf — the send itself is the player's tap in the
+        // DM — so the button's job is to put the picture in
+        // their hands and the DM in front of them in one tap.
+        // The picture is a snapshot of the card as it stands
+        // at the tap: a line the card is not showing (no event
+        // on a zero-in card, the rank fallback note, a hidden
+        // badge or status line) is not drawn. The DM tab opens
+        // synchronously inside the tap and the share follows
+        // the moment the PNG is encoded, so both ride the
+        // tap's user activation — and nothing here can throw:
+        // a failed share falls back to the download, and a
+        // blocked tab still leaves the player their picture.
+        var competeShare = null; // read-only test record of the latest entry tap (see PFPCompete below)
+        window.PFPCompete = function () { return competeShare; };
+
+        function roundedRectPath(g, x, y, w, h, r) {
+          g.beginPath();
+          g.moveTo(x + r, y);
+          g.arcTo(x + w, y, x + w, y + h, r);
+          g.arcTo(x + w, y + h, x, y + h, r);
+          g.arcTo(x, y + h, x, y, r);
+          g.arcTo(x, y, x + w, y, r);
+          g.closePath();
+        }
+
+        // The picture's contents, read off the card as it
+        // stands right now: exactly the lines the player sees.
+        // The rank fallback note ("couldn't be loaded") is not
+        // a rank and is left off; the badge and the competition
+        // display line ride only when the card is showing them.
+        function competeCardLines() {
+          var rankShown = !rankLine.hidden && !rankLine.classList.contains("note") && !!rankLine.textContent;
+          return {
+            show: prizeLine.hidden ? "" : (prizeShow.textContent || ""),
+            result: resultLine.textContent || "",
+            rank: rankShown ? rankLine.textContent : "",
+            tier: rankShown && !badgeLine.hidden ? (badgeLine.textContent || "") : "",
+            compete: rankShown && !statusLine.hidden ? (statusLine.textContent || "") : ""
+          };
+        }
+
+        // Draw the winner card as one picture and hand back its
+        // PNG bytes. The layout mirrors the card: the navy
+        // plate with the event name in gold, the result, rank
+        // and competition lines in white, the badge as the
+        // same gold pill the card wears. The canvas is sized
+        // to its content, so every line the card shows is on
+        // the picture — nothing clipped, nothing invented.
+        function buildCompeteImage(lines) {
+          var Wpx = 1080, PAD = 84;
+          var FONT = '"SF Pro Rounded", ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+          var measure = document.createElement("canvas").getContext("2d");
+          function wrap(text, font) {
+            measure.font = font;
+            var words = String(text).split(/\s+/), out = [], cur = "";
+            for (var wi = 0; wi < words.length; wi++) {
+              var trial = cur ? cur + " " + words[wi] : words[wi];
+              if (cur && measure.measureText(trial).width > Wpx - PAD * 2) { out.push(cur); cur = words[wi]; }
+              else cur = trial;
+            }
+            if (cur) out.push(cur);
+            return out;
+          }
+          var titleF = "800 40px " + FONT, labelF = "600 38px " + FONT,
+              showF = "900 84px " + FONT, resultF = "800 50px " + FONT,
+              rankF = "800 46px " + FONT, tierF = "900 40px " + FONT,
+              competeF = "800 44px " + FONT;
+          // Stack the blocks top to bottom with the card's own
+          // rhythm — each block carries its height and the gap
+          // that follows it — then size the canvas to the stack.
+          var blocks = [], contentH = 0;
+          function addText(text, font, color, lh, gapAfter) {
+            var ls = wrap(text, font);
+            blocks.push({ kind: "text", font: font, color: color, lines: ls, lh: lh, gap: gapAfter });
+            contentH += ls.length * lh + gapAfter;
+          }
+          addText("PLAY PFP — " + SKIN.PROPERTY_NAME.toUpperCase(), titleF, "#f2f3f6", 50, lines.show ? 46 : 30);
+          if (lines.show) {
+            addText("Here's something you can do while you're here.", labelF, "rgba(242, 243, 246, 0.66)", 48, 14);
+            addText(lines.show, showF, "#ffbe1a", 100, 40);
+          }
+          if (lines.result) addText(lines.result, resultF, "#f2f3f6", 62, lines.rank ? 16 : 0);
+          if (lines.rank) addText(lines.rank, rankF, "#f2f3f6", 58, lines.tier ? 26 : 0);
+          if (lines.tier) {
+            measure.font = tierF;
+            blocks.push({ kind: "tier", w: Math.ceil(measure.measureText(lines.tier).width) + 72, gap: lines.compete ? 26 : 0 });
+            contentH += 68 + (lines.compete ? 26 : 0);
+          }
+          if (lines.compete) addText(lines.compete, competeF, "#ffbe1a", 56, 0);
+          var pic = document.createElement("canvas");
+          pic.width = Wpx;
+          pic.height = 76 + contentH + 60;
+          var g = pic.getContext("2d");
+          g.fillStyle = "#0b1026";
+          g.fillRect(0, 0, pic.width, pic.height);
+          g.strokeStyle = "rgba(255, 190, 26, 0.5)";
+          g.lineWidth = 3;
+          roundedRectPath(g, 22, 22, pic.width - 44, pic.height - 44, 30);
+          g.stroke();
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          var cy = 76;
+          for (var bi = 0; bi < blocks.length; bi++) {
+            var b = blocks[bi];
+            if (b.kind === "tier") {
+              var tx = (Wpx - b.w) / 2;
+              g.fillStyle = "#ffbe1a";
+              g.strokeStyle = "#14181f";
+              g.lineWidth = 6;
+              roundedRectPath(g, tx, cy, b.w, 68, 34);
+              g.fill();
+              g.stroke();
+              g.fillStyle = "#111318";
+              g.font = tierF;
+              g.fillText(lines.tier, Wpx / 2, cy + 36);
+              cy += 68 + b.gap;
+            } else {
+              g.font = b.font;
+              g.fillStyle = b.color;
+              for (var li = 0; li < b.lines.length; li++) {
+                g.fillText(b.lines[li], Wpx / 2, cy + b.lh / 2);
+                cy += b.lh;
+              }
+              cy += b.gap;
+            }
+          }
+          return pic;
+        }
+
+        competeBtn.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          var lines = competeCardLines();
+          var rec = {
+            show: lines.show, result: lines.result, rank: lines.rank, tier: lines.tier, compete: lines.compete,
+            shared: false, downloaded: false, dmOpened: false, width: 0, height: 0
+          };
+          competeShare = rec;
+          var opened = null;
+          try { opened = window.open(competeBtn.href, "_blank", "noopener"); } catch (e) { /* the picture below still goes out */ }
+          rec.dmOpened = !!opened;
+          var pic = null, url = null;
+          try { pic = buildCompeteImage(lines); } catch (e) { pic = null; }
+          if (!pic) return;
+          rec.width = pic.width;
+          rec.height = pic.height;
+          function download() {
+            try {
+              var a = document.createElement("a");
+              a.href = url;
+              a.download = "play-pfp-winner-card.png";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              rec.downloaded = true;
+              setTimeout(function () { try { window.URL.revokeObjectURL(url); } catch (e) { /* already gone */ } }, 5000);
+            } catch (e) { /* no route left on this device — the DM is still open */ }
+          }
+          function offer(blob) {
+            if (!blob) return;
+            url = window.URL.createObjectURL(blob);
+            var file = null;
+            try { file = new File([blob], "play-pfp-winner-card.png", { type: "image/png" }); } catch (e) { file = null; }
+            if (file && navigator.canShare && navigator.share) {
+              var payload = { files: [file] };
+              var can = false;
+              try { can = navigator.canShare(payload); } catch (e) { can = false; }
+              if (can) {
+                var sp = null;
+                try { sp = navigator.share(payload); } catch (e) { sp = null; }
+                if (sp && sp.then) {
+                  sp.then(function () { rec.shared = true; }, function (err) {
+                    // A dismissed sheet is the player's choice —
+                    // anything else (the browser refusing the
+                    // share) falls back to the download, so the
+                    // picture still reaches them.
+                    if (!err || err.name !== "AbortError") download();
+                  });
+                  return;
+                }
+              }
+            }
+            download();
+          }
+          if (pic.toBlob) {
+            try { pic.toBlob(offer, "image/png"); return; } catch (e) { /* fall through to the data-URL route */ }
+          }
+          try {
+            var parts = pic.toDataURL("image/png").split(",");
+            var bin = window.atob(parts[1]);
+            var bytes = new Uint8Array(bin.length);
+            for (var i2 = 0; i2 < bin.length; i2++) bytes[i2] = bin.charCodeAt(i2);
+            offer(new Blob([bytes], { type: "image/png" }));
+          } catch (e) { /* no picture route on this device — the DM is still open */ }
+        });
 
         // ---------- Go ----------
         resize();
