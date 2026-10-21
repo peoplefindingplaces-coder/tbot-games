@@ -1563,20 +1563,31 @@
         // (Chic, in Oak Park), carried on the winner card at its
         // foot, directly above the buttons: one pick per card, rotating through the list
         // play by play (see showEats). Every entry was verified for
-        // this edition: name, Google star rating, cuisine, and its
-        // real distance from the house — all twelve sit within
-        // about a 15-minute drive. The link is the restaurant's
+        // this edition: name, star rating, cuisine, and its real
+        // distance from the house. The link is the restaurant's
         // OWN site, opened by the player's own tap.
         // Refresh the slate by editing THIS block only.
-        // EXPANSION TO 12 (2026-10-20, John's order; research
-        // verified the same day): the last four entries are the
-        // additions, each tagged in its cuisine line with the
-        // meal it fits (brunch / lunch / dinner), so the plate
-        // covers all three meals. Their stars are the Places
-        // index figures — the same source the shipped list
-        // cites; Redcoat Tavern's and Trattoria Da Luigi's
-        // Google-side readings run lower (4.1–4.3), flagged in
-        // the research file and shipped on John's word.
+        // EXPANSION TO 45 (2026-10-21, John's order — "Ride at
+        // 45"): the plate is the corrected 45 from the research
+        // file pfp-restaurants-50-research-20261021.md — the 12
+        // shipped entries carried over (Redcoat Tavern's distance
+        // corrected to its details-verified 5.2 mi) plus 33
+        // details-verified adds, each tagged in its cuisine line
+        // with the meals it fits (brunch / lunch / dinner), so
+        // the plate covers all three meals. Star figures are the
+        // research file's carrying figures: the Places index or
+        // details figure where it stands, a labeled other-platform
+        // figure (OpenTable / Restaurantji / Birdeye) where the
+        // Places record was silent or too thin — the same
+        // exception the Detroit plate's 50 ships under. The
+        // Birmingham / Clawson / Madison Heights ring stretches
+        // the drive to ~15–20 minutes; each such entry's distance
+        // says so plainly. Alchemi rides LAST, as the 45th: its
+        // 2026-10-21 details pull returned no rating and
+        // OpenTable reads ≈4.4 against the shipped file's
+        // verified 4.5 — carried as the one disputed plate, on
+        // John's word, exactly as researched. Nothing beyond the
+        // researched 45 was added to reach a rounder number.
         // ================================================================
         var RESTAURANTS = [
           { name: "Tai Fai Restaurant", stars: 4.7, cuisine: "Asian & sushi", dist: "0.7 mi", link: "https://www.taifairestaurant.com/" },
@@ -1586,11 +1597,44 @@
           { name: "Coolidge Cafe", stars: 4.5, cuisine: "American diner", dist: "0.4 mi", link: "https://coolidgecafe1.com/893-2/" },
           { name: "Mabel Gray", stars: 4.9, cuisine: "New American", dist: "3.8 mi", link: "http://mabelgraykitchen.com/" },
           { name: "Vinsetta Garage", stars: 4.5, cuisine: "American comfort food", dist: "2.9 mi", link: "https://www.vinsettagarage.com/" },
-          { name: "Alchemi", stars: 4.5, cuisine: "Farm-to-table", dist: "2.9 mi", link: "https://alchemiroyaloak.com/" },
           { name: "The Fly Trap", stars: 4.6, cuisine: "Diner · brunch & lunch", dist: "2.1 mi", link: "https://www.theflytrapferndale.com/" },
           { name: "Inyo", stars: 4.5, cuisine: "Asian fusion · lunch & dinner", dist: "2.0 mi", link: "http://www.inyorestaurant.com/" },
-          { name: "Redcoat Tavern", stars: 4.6, cuisine: "Gastropub · lunch & dinner", dist: "5.5 mi", link: "https://redcoat-tavern.com/" },
-          { name: "Trattoria Da Luigi", stars: 4.6, cuisine: "Italian · dinner", dist: "2.7 mi", link: "https://daluigis.com/" }
+          { name: "Redcoat Tavern", stars: 4.6, cuisine: "Gastropub · lunch & dinner", dist: "5.2 mi", link: "https://redcoat-tavern.com/" },
+          { name: "Trattoria Da Luigi", stars: 4.6, cuisine: "Italian · dinner", dist: "2.7 mi", link: "https://daluigis.com/" },
+          { name: "Voyager", stars: 4.8, cuisine: "New American / oyster bar · dinner", dist: "2.8 mi", link: "https://voyagerferndale.com/" },
+          { name: "Blue Nile", stars: 4.5, cuisine: "Ethiopian · dinner", dist: "1.8 mi", link: "https://bluenileferndale.com/" },
+          { name: "Christine's Cuisine", stars: 4.8, cuisine: "Ukrainian / Eastern European · lunch & dinner", dist: "2.9 mi", link: "https://christinescuisineinc.com/" },
+          { name: "Matt & Mo's Italian Beef", stars: 5.0, cuisine: "Italian beef / sandwiches · lunch & dinner", dist: "4.2 mi", link: "https://mmitalianbeef.com/" },
+          { name: "Ernie's Market", stars: 4.9, cuisine: "Deli / sandwiches · lunch", dist: "0.9 mi", link: "https://erniesmarket.site/" },
+          { name: "Republica", stars: 4.6, cuisine: "New American · brunch, lunch & dinner", dist: "2.7 mi", link: "https://republicaberkley.com/" },
+          { name: "Mr Kabob (Berkley)", stars: 4.6, cuisine: "Middle Eastern · lunch & dinner", dist: "3.6 mi", link: "https://mrkabob.com/" },
+          { name: "Whistle Stop", stars: 4.6, cuisine: "American diner · brunch & lunch", dist: "2.1 mi", link: "https://whistlestoppr.com/" },
+          { name: "Bar Gabi", stars: 4.9, cuisine: "Hungarian / European small plates · dinner", dist: "4.1 mi", link: "https://bargabi.com/" },
+          { name: "Casa Amado Taqueria", stars: 4.7, cuisine: "Mexican taqueria · lunch & dinner", dist: "3.1 mi", link: "https://casaamado.com/" },
+          { name: "Pop's For Italian", stars: 4.7, cuisine: "Italian · brunch & dinner", dist: "2.1 mi", link: "https://popsforitalian.com/" },
+          { name: "Howe's Bayou", stars: 4.5, cuisine: "Cajun / Creole · lunch & dinner", dist: "2.3 mi", link: "https://howesbayouferndale.com/" },
+          { name: "One-Eyed Betty's", stars: 4.7, cuisine: "American pub · brunch & dinner", dist: "2.2 mi", link: "https://oneeyedbettys.com/" },
+          { name: "Amici's Kitchen and Living Room", stars: 4.5, cuisine: "Italian · dinner", dist: "3.7 mi", link: "https://amiciskitchenandlivingroom.com/" },
+          { name: "Ronin Sushi", stars: 4.5, cuisine: "Japanese / sushi · dinner", dist: "2.7 mi", link: "https://roninsushi.com/" },
+          { name: "Andalusia Tapas & Spanish Wine Bar", stars: 4.8, cuisine: "Spanish tapas · dinner", dist: "2.8 mi", link: "https://andalusiatapas.com/" },
+          { name: "Noble Fish", stars: 4.7, cuisine: "Japanese / sushi & seafood · lunch & dinner", dist: "6.3 mi", link: "https://noblefishmi.com/" },
+          { name: "Hunter House Hamburgers", stars: 4.6, cuisine: "Burgers · lunch & dinner", dist: "6.7 mi", link: "https://hunterhousehamburgers.com/" },
+          { name: "Phoenicia", stars: 4.9, cuisine: "Lebanese / Mediterranean · lunch & dinner", dist: "7.2 mi", link: "https://phoeniciabirmingham.com/" },
+          { name: "Forest Grill", stars: 4.5, cuisine: "Modern European · dinner", dist: "7.3 mi", link: "https://forestbirmingham.com/" },
+          { name: "Bistro Joe's", stars: 4.7, cuisine: "French bistro · lunch & dinner", dist: "6.8 mi", link: "https://bistrojoes.com/" },
+          { name: "Three Cats", stars: 5.0, cuisine: "Tapas / American bistro · brunch, lunch & dinner", dist: "6.1 mi", link: "https://threecatscafe.com/" },
+          { name: "Boodles", stars: 4.6, cuisine: "Steakhouse / supper club · dinner", dist: "4.2 mi", link: "https://boodles-detroit.com/" },
+          { name: "Big Rock Italian Chophouse", stars: 4.5, cuisine: "Steakhouse / Italian · dinner", dist: "7.2 mi", link: "https://bigrockitalianchophouse.com/" },
+          { name: "Beverly Hills Grill", stars: 4.6, cuisine: "American brunch bistro · brunch, lunch & dinner", dist: "5.9 mi", link: "https://beverlyhillsgrill.com/" },
+          { name: "Mr Kabob (Southfield)", stars: 4.5, cuisine: "Middle Eastern · lunch & dinner", dist: "8.1 mi", link: "https://mrkabob.com/" },
+          { name: "Green Lantern Pizza", stars: 4.6, cuisine: "Pizza / Italian · lunch & dinner", dist: "5.4 mi", link: "https://greenlanternpizza.com/" },
+          { name: "Clawson Steak House", stars: 4.6, cuisine: "Steakhouse / supper club · lunch & dinner", dist: "6.4 mi", link: "https://clawsonsteakhouse.com/" },
+          { name: "Hyde Park Prime Steakhouse", stars: 4.6, cuisine: "Steakhouse · dinner", dist: "7.4 mi", link: "https://hydeparkrestaurants.com/" },
+          { name: "Breakfast Club", stars: 4.5, cuisine: "Breakfast & brunch café · brunch & lunch", dist: "6.1 mi", link: "https://breakfastclubmi.com/" },
+          { name: "Streetside Seafood", stars: 4.7, cuisine: "Seafood · lunch & dinner", dist: "7.4 mi", link: "https://streetsideseafood.com/" },
+          { name: "Woodpile BBQ Shack", stars: 4.8, cuisine: "BBQ · lunch & dinner", dist: "6.0 mi", link: "https://woodpilebbqshack.com/" },
+          { name: "Griffin Claw Brewing Company", stars: 4.6, cuisine: "Brewery / gastropub · lunch & dinner", dist: "7.0 mi", link: "https://griffinclawbrewingcompany.com/" },
+          { name: "Alchemi", stars: 4.5, cuisine: "Farm-to-table", dist: "2.9 mi", link: "https://alchemiroyaloak.com/" }
         ];
 
         // ================================================================
