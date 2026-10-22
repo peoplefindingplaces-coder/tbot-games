@@ -1005,6 +1005,59 @@
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
       }
+      /* IN-ROUND JUMP/END TRADE (John's order, 2026-10-22):
+         mid-round only — Jump takes the face's big centre seat
+         AND its box; End game takes Jump's small seat at the
+         left track's foot AND its box (the face's column moves
+         to the left track, foot-aligned). The lobby is
+         untouched and the bar's height does not change. The
+         face's widths carry !important so the load/resize
+         width pin (pinFlipWidths, written for the lobby box)
+         can never hold the lobby width into the round or the
+         round's width back into the lobby. */
+      .toolbar:not(.in-round) #gameBtn { width: 138.4px !important; }
+      .toolbar.in-round .left-col {
+        grid-column: 1;
+        justify-self: start;
+        justify-content: flex-end;
+      }
+      .toolbar.in-round #gameBtn {
+        font-size: 14.5px;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        padding: 8px 10px;
+        width: 114px !important;
+        height: 36.5px;
+        border-radius: 12px;
+        border: 0;
+      }
+      .toolbar.in-round #shakeBtn {
+        grid-column: 2;
+        justify-self: center;
+        align-self: center;
+        width: 138px;
+        height: 68px;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        padding: 17px 10px;
+        border-radius: 17px;
+      }
+      @media (max-width: 480px) {
+        .toolbar:not(.in-round) #gameBtn { width: 118px !important; }
+        .toolbar.in-round #gameBtn {
+          width: 100px !important;
+          height: 35.5px;
+          font-size: 13.5px;
+          padding: 8px 8px;
+        }
+        .toolbar.in-round #shakeBtn {
+          width: 118px;
+          height: 56px;
+          font-size: 16px;
+          padding: 16px 6px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2811,6 +2864,13 @@
         }
         window.addEventListener("resize", resize);
         window.addEventListener("load", resize);
+        // Safari's chrome can resize the visible page without a
+        // window resize the game hears; the visual viewport's own
+        // resize event closes that gap (hardening, 2026-10-22).
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", resize);
+        }
+        window.addEventListener("orientationchange", resize);
         // The floor follows the bar live (fix, 2026-10-22):
         // if the bar's own height settles after the first
         // measure, the observer re-runs the measure so the
@@ -3813,6 +3873,22 @@
           nowMs = t;
           var dt = Math.min((t - lastT) / 1000, 0.033);
           lastT = t;
+
+          // The floor is re-measured off the bar's LIVE top edge
+          // every frame (hardening, 2026-10-22): pieces were seen
+          // settling behind the bar when the viewport moved under
+          // a seated bar (Safari chrome show/hide, visual-viewport
+          // shifts) between the event-driven re-measures, and a
+          // settled piece never re-fell. The inset can now never
+          // go stale — and since floorY() resolves to the bar's
+          // own top, the physics clamp lifts any piece the moving
+          // floor catches back onto the bar's top edge on the
+          // very next frame. (The H in the formula cancels: the
+          // floor IS the bar's measured top, fresh each frame.)
+          if (toolbarEl) {
+            var liveInset = Math.max(0, H - toolbarEl.getBoundingClientRect().top);
+            if (liveInset !== floorInset) floorInset = liveInset;
+          }
 
           // The hole glides first, so this frame's physics, capture
           // test, and rendering all work from its new position.
