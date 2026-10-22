@@ -4086,14 +4086,16 @@
           if (on) { musicOutcome = "playing"; disarmElWatchdog(); truthHeals = 0; }
         }
 
-        // The music's level, halved (John, 2026-10-19 — "turn
-        // down the music"): every audible music path scales from
-        // this one number — the Web Audio gain below and the
-        // element pair's volume when it is the engine — so the
-        // promoted path never comes back louder than intended.
+        // The music's level: halved (John, 2026-10-19 — "turn
+        // down the music"), then down another 30% (John,
+        // 2026-10-21 — "turn down music 30%"): 0.5 × 0.7 = 0.35.
+        // Every audible music path scales from this one number —
+        // the Web Audio gain below and the element pair's volume
+        // when it is the engine — so the promoted path never
+        // comes back louder than intended.
         // Sound effects ride a separate route (the chime context,
         // the bounce voice) and are NOT scaled by this.
-        var MUSIC_GAIN = 0.5;   // half of the former full level (1)
+        var MUSIC_GAIN = 0.35;  // 30% below the former half level (0.5)
 
         // --- Web Audio engine ---
         var actx = null;        // the AudioContext, once created
