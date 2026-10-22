@@ -297,8 +297,14 @@
          keeps the mid-round bar exactly as tall as the
          lobby bar, with the bottom row close beneath the
          Jump row and no void between them. */
-      #gameBtn { grid-row: 1; grid-column: 1; justify-self: start; align-self: center; }
-      #shakeBtn { grid-row: 1; grid-column: 2; }
+      /* START/JUMP SWITCH (John's order, 2026-10-21 evening):
+         the two buttons trade seats AND sizes — the game face
+         wears Jump's big centre seat in both states; Jump
+         wears the face's small left seat (top row in the
+         lobby, bottom row mid-round via the switch rule
+         below). Everything else on the bar is untouched. */
+      #gameBtn { grid-row: 1; grid-column: 2; }
+      #shakeBtn { grid-row: 1; grid-column: 1; justify-self: start; align-self: center; }
       #addBtn { grid-row: 1; grid-column: 3; justify-self: end; align-self: center; }
       #resetBtn { grid-row: 2; grid-column: 3; justify-self: end; align-self: start; }
       .sound-stack { grid-row: 2; grid-column: 1; justify-self: start; }
@@ -321,6 +327,8 @@
       .toolbar:has(#resetBtn[hidden]) #gameBtn {
         background: var(--btn-bg);
         color: var(--btn-ink);
+      }
+      .toolbar:has(#resetBtn[hidden]) #shakeBtn {
         grid-row: 2;
         align-self: end;
       }
@@ -364,7 +372,19 @@
          ("off") on either switch, at the stack's shrunken
          12.5px label size. */
       #gameBtn {
-        width: 114px;
+        /* The face wears Jump's exact box (137x68): a fixed
+           width and height, with the label set at the largest
+           size that fits BOTH faces inside it — "Start game"
+           is a longer word than "Jump", so the type steps
+           down a touch and the side padding slims; the box
+           itself never moves a pixel between faces. */
+        width: 137px;
+        height: 68px;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        padding: 17px 12px;
+        border-radius: 16px;
         background: var(--gold);
         color: #161617;
       }
@@ -394,13 +414,7 @@
          match — an easier, more confident tap target
          mid-round, seated dead centre of the bar. */
       #shakeBtn {
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: 0.01em;
-        padding: 17px 26px;
-        border-radius: 16px;
-        min-width: 137px;
-        min-height: 68px;
+        width: 114px;
       }
       /* The free-play Pack’em, enlarged to the big-button
          class (John's ruling, 2026-10-19): the same 22px
@@ -799,11 +813,8 @@
            can wrap to two rows with the tall Jump row, and the
            chips must clear it. */
         #shakeBtn {
-          font-size: 20px;
-          padding: 16px 20px;
-          border-radius: 15px;
+          width: 104px;
           min-width: 0;
-          min-height: 52px;
         }
         /* Pack’em steps down with JUMP at phone width, to a
            102px-minimum / 52px-tall phone seat with slimmer
@@ -827,7 +838,15 @@
            .sound-stack rule above already gives them the
            shrunken label size and padding), Music over
            Bouncer inside the stack's own cell. */
-        #gameBtn { width: 104px; min-width: 0; }
+        #gameBtn {
+          font-size: 20px;
+          padding: 16px 20px;
+          border-radius: 15px;
+          min-width: 0;
+          min-height: 52px;
+          height: 52px;
+          width: auto;
+        }
         #musicBtn, #bouncerBtn { min-width: 0; width: 104px; }
         /* The bar on a phone is the desktop bar's compact
            TWO rows (John's pictures and height ruling,
