@@ -733,8 +733,9 @@
          competition display line on this card). A tap makes a
          picture of this winner card, offers it through the
          share sheet (or downloads it where sharing files is
-         not available), and opens the @TBOTgamevr DMs so the
-         player can send the picture as their entry (see the
+         not available), so the guest can
+         paste it into the body of their Airbnb message to
+         the host (John's ruling, 2026-10-22; see the
          competition block in the script). It wears the same
          medium size as TBOT's so the whole card still fits
          one screen. */
@@ -754,13 +755,14 @@
       /* The button's second line, exactly as TBOT's: the
          "Top 5!! Win a 3pm check-in" line stands on its own
          line (John's order, 2026-10-21: it replaces the old
-         "Competition" label) and "Screenshot & paste here"
+         "Competition" label) and "Screenshot & paste in your Airbnb message"
          sits directly under it — two stacked lines, never
          one long line that overflows the card. (Line two's
-         wording is John's order, 2026-10-21: "paste", not
-         "upload".) */
+         wording is John's ruling, 2026-10-22.) */
       .over-card a.over-compete .compete-sub {
         display: block;
+        font-size: 12px;
+        white-space: nowrap;
       }
       .over-best {
         font-size: 13px;
@@ -1126,7 +1128,7 @@
         <p class="over-result" id="resultLine"></p>
         <p class="over-rank" id="rankLine" hidden></p>
         <p class="over-tier" id="tierLine" hidden></p>
-        <a class="btnlink over-compete" id="competeBtn" href="https://ig.me/m/tbotgamevr" target="_blank" rel="noopener">Top 5!! Win a 3pm check-in<span class="compete-sub">Screenshot &amp; paste here</span></a>
+        <a class="btnlink over-compete" id="competeBtn">Top 5!! Win a 3pm check-in<span class="compete-sub">Screenshot &amp; paste in your Airbnb message</span></a>
         <p class="over-best" id="bestLine"></p>
 
         <div class="rate-box">
@@ -5865,23 +5867,26 @@
         //      opens in the share sheet so the player can send
         //      it; where file sharing is not available, the
         //      picture downloads to the device instead.
-        //   3. It opens the competition DM (the link's own
-        //      href, https://ig.me/m/tbotgamevr) in a new tab,
-        //      so the player can send the picture to
-        //      @TBOTgamevr as their entry.
+        //   3. The guest pastes the picture into the body
+        //      of their Airbnb message to the host — that
+        //      message is the claim, and how the 3pm
+        //      check-in is tracked (John's ruling,
+        //      2026-10-22: Airbnb changed its rules for
+        //      guest information, so the Instagram DM
+        //      claim path is out; no external link opens.)
         // Instagram takes no message from a game on a player's
         // behalf — the send itself is the player's tap in the
-        // DM — so the button's job is to put the picture in
-        // their hands and the DM in front of them in one tap.
+        // Airbnb message — so the button's job is to put the
+        // picture in their hands in one tap.
         // The picture is a snapshot of the card as it stands
         // at the tap: a line the card is not showing (no event
         // on a zero-in card, the rank fallback note, a hidden
-        // badge) is not drawn. The DM tab opens synchronously
-        // inside the tap and the share follows the moment the
-        // PNG is encoded, so both ride the tap's user
-        // activation — and nothing here can throw: a failed
-        // share falls back to the download, and a blocked tab
-        // still leaves the player their picture.
+        // badge) is not drawn.
+        // The share follows the moment the PNG is encoded,
+        // riding the tap's user activation — and nothing
+        // here can throw: a failed share falls back to the
+        // download, so the player always leaves with their
+        // picture.
         var competeShare = null; // read-only test record of the latest entry tap (see PFPCompete below)
         window.PFPCompete = function () { return competeShare; };
 
@@ -6008,12 +6013,9 @@
           var lines = competeCardLines();
           var rec = {
             show: lines.show, result: lines.result, rank: lines.rank, tier: lines.tier, compete: lines.compete,
-            shared: false, downloaded: false, dmOpened: false, width: 0, height: 0
+            shared: false, downloaded: false, width: 0, height: 0
           };
           competeShare = rec;
-          var opened = null;
-          try { opened = window.open(competeBtn.href, "_blank", "noopener"); } catch (e) { /* the picture below still goes out */ }
-          rec.dmOpened = !!opened;
           var pic = null, url = null;
           try { pic = buildCompeteImage(lines); } catch (e) { pic = null; }
           if (!pic) return;
@@ -6029,7 +6031,7 @@
               a.remove();
               rec.downloaded = true;
               setTimeout(function () { try { window.URL.revokeObjectURL(url); } catch (e) { /* already gone */ } }, 5000);
-            } catch (e) { /* no route left on this device — the DM is still open */ }
+            } catch (e) { /* no route left on this device */ }
           }
           function offer(blob) {
             if (!blob) return;
@@ -6066,7 +6068,7 @@
             var bytes = new Uint8Array(bin.length);
             for (var i2 = 0; i2 < bin.length; i2++) bytes[i2] = bin.charCodeAt(i2);
             offer(new Blob([bytes], { type: "image/png" }));
-          } catch (e) { /* no picture route on this device — the DM is still open */ }
+          } catch (e) { /* no picture route on this device */ }
         });
 
         // ---------- Go ----------
