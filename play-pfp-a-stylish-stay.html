@@ -906,6 +906,53 @@
         .hint { font-size: 12.5px; }
         .game-title { font-size: 16.5px; }
       }
+      /* IN-ROUND JUMP/END TRADE (John's order, 2026-10-22):
+         mid-round only — Jump takes the face's big centre seat
+         AND its box; End game takes Jump's small seat at the
+         bottom row's left cell AND its box. The lobby is
+         untouched, the sound stack keeps its in-round right
+         seat, and the bar's height does not change: row 1 is
+         still set by the 68px box (now Jump's) and row 2 by
+         the stack, exactly as before. */
+      .toolbar.in-round #shakeBtn {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: center;
+        align-self: start;
+        width: 137px;
+        height: 68px;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        padding: 10px;
+        border-radius: 16px;
+      }
+      .toolbar.in-round #gameBtn {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+        align-self: end;
+        width: 114px;
+        height: auto;
+        font-size: 14.5px;
+        font-weight: 700;
+        letter-spacing: normal;
+        padding: 11px 10px;
+        border-radius: 12px;
+      }
+      @media (max-width: 480px) {
+        .toolbar.in-round #shakeBtn {
+          width: 108px;
+          height: 54px;
+          font-size: 15.5px;
+          padding: 10px 6px;
+          border-radius: 15px;
+        }
+        .toolbar.in-round #gameBtn {
+          width: 100px;
+          padding: 10.5px 8px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2833,6 +2880,13 @@
           new ResizeObserver(function () { resize(); }).observe(toolbarEl);
         }
         window.addEventListener("load", resize);
+        // Safari's chrome can resize the visible page without a
+        // window resize the game hears; the visual viewport's own
+        // resize event closes that gap (hardening, 2026-10-22).
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", resize);
+        }
+        window.addEventListener("orientationchange", resize);
 
         function rand(min, max) { return min + Math.random() * (max - min); }
 
@@ -3827,6 +3881,22 @@
           nowMs = t;
           var dt = Math.min((t - lastT) / 1000, 0.033);
           lastT = t;
+
+          // The floor is re-measured off the bar's LIVE top edge
+          // every frame (hardening, 2026-10-22): pieces were seen
+          // settling behind the bar when the viewport moved under
+          // a seated bar (Safari chrome show/hide, visual-viewport
+          // shifts) between the event-driven re-measures, and a
+          // settled piece never re-fell. The inset can now never
+          // go stale — and since floorY() resolves to the bar's
+          // own top, the physics clamp lifts any piece the moving
+          // floor catches back onto the bar's top edge on the
+          // very next frame. (The H in the formula cancels: the
+          // floor IS the bar's measured top, fresh each frame.)
+          if (toolbarEl) {
+            var liveInset = Math.max(0, H - toolbarEl.getBoundingClientRect().top);
+            if (liveInset !== floorInset) floorInset = liveInset;
+          }
 
           // The hole glides first, so this frame's physics, capture
           // test, and rendering all work from its new position.
