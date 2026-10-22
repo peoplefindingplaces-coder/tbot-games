@@ -3952,15 +3952,17 @@
         // crossfade), and the element engine loops its song
         // natively — no silence gap, no overlap, no position
         // reset anywhere in the song.
-        // The MUSIC LEVEL for this edition (John's ruling,
-        // 2026-10-19 — "turn down the music" on the PFP games):
-        // HALF the chassis' standard level, applied to BOTH music
+        // The MUSIC LEVEL for this edition (John's rulings,
+        // 2026-10-19 — "turn down the music" on the PFP games;
+        // 2026-10-21 — "turn down music 30%"):
+        // HALF the chassis' standard level, then down another
+        // 30% (0.5 × 0.7 = 0.35), applied to BOTH music
         // engines together so their relative balance is unchanged
         // — the Web Audio gain and the element engine's volume
         // both sit at MUSIC_LEVEL, whichever one holds the song. Sound
         // effects are NOT touched. Every PFP edition ships this
         // same level, so the family sounds uniform.
-        var MUSIC_LEVEL = 0.5;
+        var MUSIC_LEVEL = 0.35;
         var musicWanted = true;   // ON BY DEFAULT (John's ruling) — off only when the player switches it off
         var startRequested = false; // true once the default-on start (or Start game / the Music switch) asks for music
         var musicPlaying = false; // true only once playback is confirmed
