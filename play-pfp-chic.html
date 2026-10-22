@@ -1029,7 +1029,7 @@
         <button id="addBtn" type="button">Pack’em</button>
         <button id="resetBtn" type="button">Reset</button>
         <div class="sound-stack" id="soundStack">
-          <button id="musicBtn" type="button">Music: off</button>
+          <button id="musicBtn" type="button">Music: on</button>
           <button id="bouncerBtn" type="button">Bouncer: on</button>
         </div>
       </div>
@@ -1122,6 +1122,25 @@
         var packStack = document.getElementById("packStack");
         var soundStack = document.getElementById("soundStack");
         var bouncerBtn = document.getElementById("bouncerBtn");
+
+        // ---------- Audio URLs carry an honest type ----------
+        // Where this game ships as ONE inlined file, its MP3s
+        // ride inside data: URLs — and a build that types them
+        // data:application/octet-stream hands the <audio>
+        // elements a type browsers refuse outright ("no
+        // supported sources" on play()), which kills the
+        // element engine and every handoff to it while leaving
+        // Web Audio untouched (its decoder sniffs the bytes).
+        // The bytes are MP3 by their magic, so any octet-stream
+        // data URL is re-typed to data:audio/mpeg before an
+        // element ever sees it. Plain file URLs (this build's
+        // assets/*.mp3) pass through unchanged.
+        function audioSrc(url) {
+          if (typeof url === "string" && url.indexOf("data:application/octet-stream") === 0) {
+            return "data:audio/mpeg" + url.slice("data:application/octet-stream".length);
+          }
+          return url;
+        }
 
         // ---------- Button boxes never change size ----------
         // The buttons whose label flips between states —
@@ -1915,7 +1934,7 @@
           if (!n) return;
           trackIndex = rotationSeat(TRACK_POS_KEY, n, healTrackSeat);
         })();
-        var skinTrack = SKIN.TRACKS.length ? SKIN.TRACKS[trackIndex] : "";
+        var skinTrack = SKIN.TRACKS.length ? audioSrc(SKIN.TRACKS[trackIndex]) : "";
         bgMusic.src = skinTrack;
 
         var W = 0, H = 0, DPR = 1;
@@ -2528,7 +2547,7 @@
         for (var bvi = 0; bvi < BOUNCE_POOL_SIZE; bvi++) {
           var bel = new Audio();
           bel.preload = "auto";
-          bel.src = BOUNCE_VOICE_SRC;
+          bel.src = audioSrc(BOUNCE_VOICE_SRC);
           bouncePool.push(bel);
         }
         // Retired with the chime blessing (John's ruling,
@@ -3958,14 +3977,19 @@
         }
 
         function setMusicLabel() {
-          // The switch tells the truth about the SOUND, not the
-          // setting (repair, 2026-10-21): it reads "on" only
-          // while playback is confirmed. Before the first tap —
-          // while the browser still holds the default-on start —
-          // it honestly reads "off"; the first tap anywhere
-          // starts the song and the label flips to "on" as the
-          // confirmation lands.
-          musicBtn.textContent = musicPlaying ? "Music: on" : "Music: off";
+          // The switch tells the truth about the SETTING
+          // (John's ruling, 2026-10-21 — "The sound is off when
+          // you open the game. It should be on."): the music is
+          // ON by default, so the switch reads "Music: on" from
+          // the first moment the game opens — no tap needed.
+          // Where the browser holds the actual sound until the
+          // first tap, that tap (anywhere on the page, Start
+          // game included) starts the song the switch already
+          // promises; the label never waits on the playback
+          // confirmation. It reads "off" only once the player
+          // switches it off, and that off is never saved — the
+          // next open is on again.
+          musicBtn.textContent = musicWanted ? "Music: on" : "Music: off";
         }
         function confirmPlaying(on) {
           if (musicPlaying !== on) {
@@ -4090,7 +4114,7 @@
         function healTrackSeat(healed) {
           if (healed === trackIndex) return;
           trackIndex = healed;
-          skinTrack = SKIN.TRACKS[healed];
+          skinTrack = audioSrc(SKIN.TRACKS[healed]);
           bgMusic._trackIdx = healed;
           if (typeof bgMusicB !== "undefined") bgMusicB._trackIdx = healed;
           if (musicPlaying) return;
@@ -4372,6 +4396,23 @@
           elPlay(bgMusic); // its "playing" event confirms
         }
 
+        // THE START KICK (repair, 2026-10-21): inside the Start
+        // tap — and on the Music switch's on-presses — if
+        // playback is not yet CONFIRMED, hand the song to the
+        // element engine synchronously, inside the very gesture
+        // the browser requires, instead of leaving the tap to
+        // Web Audio's asynchronous proof (a decode still in
+        // flight, a context still resuming) while the round
+        // starts in silence. promoteElement is the hard
+        // handoff: Web Audio is stopped and suspended first,
+        // then the element starts — one voice, never two. A
+        // kick while the song is already sounding is a no-op,
+        // so the continuous beat is never restarted by it.
+        function kickElementAtStart() {
+          if (!musicWanted || musicPlaying) return;
+          promoteElement("start-kick");
+        }
+
         // The watchdog: give Web Audio 2.5 s from a start to prove
         // itself. It never arms before the player's first tap —
         // a context held suspended by the browser's no-gesture
@@ -4503,6 +4544,7 @@
             musicWanted = true;
             setMusicLabel();
             tryStartMusic(); // inside this tap, so the browser allows it
+            kickElementAtStart(); // and if Web Audio hasn't confirmed, the element starts on this same press — the off→on rescue in one press
           } else {
             // Wanted but not yet sounding — the browser held
             // the default-on start until this tap. The tap
@@ -4513,6 +4555,7 @@
             // pointerdown had just woken — the song only came
             // on the second tap's off→on swing).
             tryStartMusic();
+            kickElementAtStart(); // unconfirmed playback hands over to the element inside this same tap
           }
         });
 
@@ -5240,6 +5283,7 @@
           // the scorebook is disabled this is a no-op.)
           if (!roundPosted && lastRound) postScore();
           tryStartMusic();
+          kickElementAtStart(); // the Start tap itself starts the song: unconfirmed playback hands over to the element inside this gesture
           primeChimeAudio(); // unlock the cha-ching under this tap, before any capture can happen
           // Start does one thing now: start the round, right here.
           // No tab opens; the trip to the event lives on the
