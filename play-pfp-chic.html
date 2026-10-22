@@ -262,26 +262,38 @@
          .in-round rule under this one. (The sound stack
          renders at this column's foot in the lobby without
          living here — see its seat rule below.) */
-      /* START/JUMP SWITCH (John's order, 2026-10-21 evening):
-         the game face and Jump trade seats AND sizes — the
-         face's column moves to the middle track and centres
-         its button in BOTH states (the face no longer drops
-         mid-round; JUMP drops instead, in the left track),
-         and Jump takes the left track: top-aligned in the
-         lobby, foot-aligned mid-round. Nothing else on the
-         bar changes. */
       .left-col {
-        grid-row: 1;
-        grid-column: 2;
-        justify-self: center;
+        grid-column: 1;
+        justify-self: start;
         align-self: stretch;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 8px;
       }
-      .toolbar.in-round .left-col { justify-content: center; }
+      .toolbar.in-round .left-col { justify-content: flex-end; }
+      /* In-game swap (John's order, 2026-10-22: "switch The
+         Jump Button and end game in the game not the
+         Pack’em" — the lobby / Pack’em bar above is
+         unchanged): mid-round ONLY, Jump and End game trade
+         seats. End game — carried by .left-col — takes the
+         centre track (grid-column 2), still dropped to the
+         lower part of its column; Jump takes the left
+         track (grid-column 1) at the bar's left edge. Both
+         keep their own size and face; the right column
+         (sound pair mid-round) never moves. */
+      .toolbar.in-round .left-col {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: center;
+        align-items: center;
+      }
+      .toolbar.in-round #shakeBtn {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+      }
       /* Start game wears the gold hero face, the same
          treatment The Last TBOT In's Start wears: a polished
          gold gradient, a strong dark border, and a warm glow
@@ -297,13 +309,13 @@
          reduced-motion: no motion at all for players who ask
          for none. */
       .toolbar:not(.in-round) #gameBtn {
-        font-size: 20px;
+        font-size: 14.5px;
         font-weight: 800;
-        letter-spacing: 0.01em;
-        padding: 17px 12px;
-        width: 138.4px;
-        height: 68px;
-        border-radius: 17px;
+        letter-spacing: 0.03em;
+        padding: 8px 10px;
+        width: 114px;
+        min-height: 32px;
+        border-radius: 12px;
         color: #221a04;
         background: linear-gradient(180deg, #ffe082 0%, #ffc21f 52%, #eda200 100%);
         border: 3px solid #14181f;
@@ -322,13 +334,13 @@
          see .toolbar.in-round .left-col above); the box,
          the size and the tap never change. */
       .toolbar.in-round #gameBtn {
-        font-size: 20px;
+        font-size: 14.5px;
         font-weight: 800;
-        letter-spacing: 0.01em;
-        padding: 17px 12px;
-        width: 138.4px;
-        height: 68px;
-        border-radius: 17px;
+        letter-spacing: 0.03em;
+        padding: 8px 10px;
+        width: 114px;
+        min-height: 32px;
+        border-radius: 12px;
         background: var(--btn-bg);
         color: var(--btn-ink);
         border: 3px solid transparent;
@@ -352,9 +364,8 @@
       @media (prefers-reduced-motion: reduce) {
         .toolbar:not(.in-round) #gameBtn { animation: none; }
       }
-      #shakeBtn { grid-row: 1; grid-column: 1; justify-self: start; align-self: start; }
-      .toolbar.in-round #shakeBtn { align-self: end; }
-      .pack-stack { grid-row: 1; grid-column: 3; justify-self: end; }
+      #shakeBtn { grid-column: 2; justify-self: center; }
+      .pack-stack { grid-column: 3; justify-self: end; }
       /* The sound pair: Music stacked directly OVER the
          Bouncer toggle in one short column (John's order,
          2026-10-20: "the music should be over the bouncer —
@@ -489,13 +500,13 @@
          same single accent button in the same middle track,
          dead centre of the bar at every width. */
       #shakeBtn {
-        font-size: 14.5px;
+        font-size: 26px;
         font-weight: 800;
-        letter-spacing: 0.03em;
-        padding: 8px 10px;
-        width: 114px;
-        height: 36.5px;
-        border-radius: 12px;
+        letter-spacing: 0.01em;
+        padding: 20px 34px;
+        border-radius: 17px;
+        min-width: 134px;
+        min-height: 68px;
       }
       /* The control buttons NEVER move (John's order,
          2026-10-20 — "Fix control buttons they all seemed to
@@ -584,11 +595,22 @@
         position: fixed;
         inset: 0;
         display: flex;
-        align-items: center;
-        justify-content: center;
         background: rgba(8, 10, 14, 0.45);
         z-index: 10;
-        padding: 20px;
+        padding: calc(14px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));
+        /* The overlay itself scrolls: paired with the card's
+           margin: auto below, this is the safe-centering pattern —
+           when the card fits, it sits centred; when a short or
+           landscape screen (or a webview whose 100dvh runs taller
+           than the visible area) leaves it less room than the
+           card needs, the card aligns to the top and the overlay
+           scrolls, so the prize end of the card is always
+           reachable and never pushed off the screen. The old
+           pattern — align/justify centering over a card capped
+           by max-height with its own internal scroll — is the
+           one players reported as the winner card coming off
+           the screen (fix, 2026-10-21). */
+        overflow-y: auto;
       }
       .overlay[hidden] { display: none; }
       .over-card {
@@ -602,19 +624,21 @@
         width: 100%;
         max-width: 340px;
         box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
-        /* The whole card fits on one screen: the medium buttons
-           plus the tightened internal spacing keep every line —
-           prize, result, rank, status, best, stars, and both
-           buttons — inside the viewport with no scrolling, even
-           on a short phone. The max-height below is only a
-           last-resort guard for extreme viewports. */
-        max-height: calc(100dvh - 40px);
-        overflow-y: auto;
+        /* margin: auto centres the card on both axes when it
+           fits and collapses to the start edge when it doesn't
+           (see the overlay above); flex-shrink: 0 keeps the
+           flex row from ever compressing the card's box. The
+           card carries no max-height and no internal scroll of
+           its own anymore — the fit ladder below sizes it to
+           the screen, and the overlay's scroll is the net
+           under the ladder. */
+        margin: auto;
+        flex-shrink: 0;
       }
       .over-prize {
-        font-size: 30px;
+        font-size: 27px;
         font-weight: 800;
-        line-height: 1.22;
+        line-height: 1.18;
         margin: 0 0 5px;
       }
       .over-prize[hidden] { display: none; }
@@ -625,7 +649,7 @@
          plate and the room. The plate names the EVENT ONLY, and on
          this game the plate IS the link to the event (the card's
          rule) — it is the biggest, boldest text on the card:
-         45px extra-bold on its own full-width line under the
+         40px extra-bold on its own full-width line under the
          lead-in, wrapping inside the plate so even the longest
          event name fits the card without clipping. */
       .prize-show {
@@ -633,7 +657,7 @@
         margin-top: 6px;
         background: #0b1026;
         color: #ffbe1a;
-        font-size: 45px;
+        font-size: 40px;
         font-weight: 900;
         line-height: 1.15;
         padding: 10px 14px 12px;
@@ -644,20 +668,22 @@
       }
       a.prize-show:active { transform: scale(0.98); }
       /* The result line, enlarged: the round's figures — pieces
-         in, clock — in noticeably bigger, heavier type (~21px,
+         in, clock — in noticeably bigger, heavier type (~20px,
          extra-bold, full ink) so it reads as a headline under the
          prize. At phone width it wraps cleanly onto two lines
          inside the card rather than overflowing. */
       .over-result {
-        font-size: 21px;
+        font-size: 20px;
         font-weight: 800;
         color: var(--ink);
         line-height: 1.27;
         margin: 0 0 6px;
       }
       .over-rank {
-        font-size: 20px;
-        font-weight: 800;
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--ink);
+        letter-spacing: 0.01em;
         margin: 0 0 5px;
         line-height: 1.27;
       }
@@ -721,9 +747,13 @@
          share sheet (or downloads it where sharing files is
          not available), and opens the @TBOTgamevr DMs so the
          player can send the picture as their entry (see the
-         competition block in the script). It wears the same
-         medium size as TBOT's so the whole card still fits
-         one screen. */
+         competition block in the script). Its "Win a 3pm
+         check-in" line is the card's loudest line after the
+         prize plate (John's order, 2026-10-21: make the win
+         a 3pm more pronounced) — see the .compete-win rule
+         below. The button's own padding and margins step
+         down a touch so the bigger win line costs the card
+         no extra height in its base rhythm. */
       .over-card a.over-compete {
         display: block;
         font-size: 15px;
@@ -732,21 +762,47 @@
         text-align: center;
         text-decoration: none;
         white-space: normal;
-        padding: 10px 14px;
+        padding: 8px 14px;
         min-height: 42px;
         border-radius: 14px;
-        margin: 1px 0 4px;
+        margin: 1px 0 2px;
       }
-      /* The button's second line, exactly as TBOT's: the
-         "Top 5!! Win a 3pm check-in" line stands on its own
-         line (John's order, 2026-10-21: it replaces the old
-         "Competition" label) and "Screenshot & paste here"
-         sits directly under it — two stacked lines, never
-         one long line that overflows the card. (Line two's
-         wording is John's order, 2026-10-21: "paste", not
-         "upload".) */
+      /* The button's stacked lines: "Top 5!!" leads small,
+         the "Win a 3pm check-in" line carries the button —
+         26px black-weight gold on its own full-width deep-
+         navy plate with a thick dark border and a warm gold
+         glow, the same plate language as the prize and eats
+         plates, so the prize on offer reads as a headline
+         in its own right — and "Screenshot & paste here"
+         sits directly under it. Three stacked lines, never
+         one long line that overflows the card. (The sub
+         line's wording is John's order, 2026-10-21:
+         "paste", not "upload".) */
+      .over-card a.over-compete .compete-top {
+        display: block;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        margin-bottom: 5px;
+      }
+      .over-card a.over-compete .compete-win {
+        display: block;
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1.15;
+        letter-spacing: 0.01em;
+        color: #ffbe1a;
+        background: #0b1026;
+        border: 3px solid #14181f;
+        border-radius: 12px;
+        padding: 7px 10px 9px;
+        margin-bottom: 5px;
+        box-shadow: 0 6px 20px rgba(255, 190, 26, 0.45), 0 3px 10px rgba(0, 0, 0, 0.35);
+      }
       .over-card a.over-compete .compete-sub {
         display: block;
+        font-size: 13.5px;
+        font-weight: 700;
       }
       .over-best {
         font-size: 13px;
@@ -776,7 +832,7 @@
         background: #0b1026;
         border-radius: 14px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
-        padding: 12px 18px;
+        padding: 10px 18px;
       }
       .eats-kicker {
         font-size: 20px;
@@ -836,7 +892,7 @@
         background: transparent;
         color: var(--ink-soft);
         opacity: 0.45;
-        font-size: 40px;
+        font-size: 36px;
         line-height: 1;
         padding: 6px 7px;
         min-width: 52px;
@@ -856,63 +912,89 @@
       .rate-thanks[hidden] { display: none; }
       /* Short viewports: the card's fit ladder. The fullest card
          the game can deal — the longest event name wrapped over
-         four lines of the navy plate, the result line wrapped to
-         two, the rank line showing with the gold tier badge pill
-         under it, "Your best", the five stars,
-         the enlarged eats plate with its facts line wrapped to
-         two, and both buttons at full size — was measured live
-         at 804px tall in the base rhythm (390×844, zero scroll),
-         which fits a tall phone outright. The eats lead's step
-         up to 20px added ~7px to the plate; that height came
-         back out of the card's other margins (base and tiers
-         alike), so the fullest card's totals stand where they
-         were. The tier badge's height (added 2026-10-20) came
-         out the same way: a few points off the card's margins
-         and paddings, base and tiers alike, and the badge steps
-         down with the rhythm in the tiers below. Below 844, the tiers step the whole rhythm down
-         together (lead-in and plate type, plate padding, every
-         gap, the star size) so the SAME fullest card still ends
-         inside calc(100dvh - 40px) with no internal scroll: the
-         tiers' combined tightening (~186px) lands it at ~618px
-         at the SE-class 667px height, inside the 627px cap.
-         Nothing is removed at any tier, the eats name never
-         leaves 26px and its lead never leaves 20px, the rank
-         line stays bold and readable (never under 18.5px), the
-         buttons never leave 52px, and taller screens never see
-         any of this. */
-      @media (max-height: 830px) {
-        .over-card { padding: 10px 20px; }
-        .over-prize { font-size: 28px; margin-bottom: 7px; }
-        .prize-show { font-size: 42px; margin-top: 7px; padding: 11px 14px 13px; }
-        .over-result { font-size: 20px; margin-bottom: 9px; }
-        .over-tier { font-size: 19px; padding: 7px 19px; margin-bottom: 6px; }
-        .over-eats { margin-bottom: 8px; }
-        .over-best { margin-bottom: 8px; }
-        .rate-box { margin-bottom: 8px; }
-        button.star-btn { font-size: 38px; padding: 7px; }
-      }
-      @media (max-height: 779px) {
+         three lines of the navy plate, the result line wrapped
+         to two, the rank line showing with the gold tier badge
+         pill under it, the compete button, "Your best", the
+         five stars, the eats plate with its facts line wrapped
+         to two, and both buttons at full size — measured ~845px
+         tall in the old base rhythm at desktop height WITHOUT
+         its rank line or tier badge, i.e. ~890px as players
+         actually meet it: taller than the phones it was dealt
+         on, which is why it came off their screens (reported
+         2026-10-21). The ladder below is re-based on that real
+         fullest card: the base rhythm is trimmed (lead-in and
+         plate type, eats padding, star size), the tiers start
+         at 870px so the common 844px-tall phone is already on
+         the ladder, and they step the whole rhythm down
+         together so the fullest card fits outright at 844, at
+         740, and at the SE-class 667 — with a 600px tier under
+         those for the shortest screens. Nothing is removed at
+         any tier, the eats name never leaves 26px and its lead
+         never leaves 20px, the rank line stays 900-weight and
+         never under 20px, the buttons never leave 52px, and
+         taller screens never see any of this. Under the ladder
+         sits the structural net (see .overlay / .over-card):
+         on any screen shorter than the tightest tier, the
+         overlay scrolls with the card's top at the start edge,
+         so no part of the card is ever off the screen and
+         unreachable. */
+      @media (max-height: 870px) {
         .over-card { padding: 9px 20px; }
-        .over-prize { font-size: 24px; line-height: 1.2; margin-bottom: 6px; }
-        .prize-show { font-size: 34px; line-height: 1.12; margin-top: 6px; padding: 9px 14px 11px; }
-        .over-result { font-size: 19px; line-height: 1.26; margin-bottom: 8px; }
-        .over-eats { margin-bottom: 8px; padding: 11px 18px 12px; }
-        .over-rank { font-size: 18.5px; line-height: 1.27; margin-bottom: 4px; }
-        .over-tier { font-size: 18.5px; padding: 6px 17px; margin-bottom: 4px; }
+        .over-prize { font-size: 25px; margin-bottom: 6px; }
+        .prize-show { font-size: 36px; margin-top: 6px; padding: 10px 14px 12px; }
+        .over-result { font-size: 19px; margin-bottom: 8px; }
+        .over-tier { font-size: 19px; padding: 7px 18px; margin-bottom: 5px; }
+        .over-card a.over-compete .compete-win { font-size: 24px; padding: 6px 10px 8px; }
+        .over-eats { margin-bottom: 7px; }
         .over-best { margin-bottom: 7px; }
-        .rate-box { margin-bottom: 6px; }
-        .rate-label { margin-bottom: 3px; }
+        .rate-box { margin-bottom: 7px; }
         button.star-btn { font-size: 34px; padding: 6px 7px; }
       }
+      @media (max-height: 779px) {
+        .over-card { padding: 8px 20px; }
+        .over-prize { font-size: 23px; line-height: 1.15; margin-bottom: 5px; }
+        .prize-show { font-size: 32px; line-height: 1.12; margin-top: 5px; padding: 8px 14px 10px; }
+        .over-result { font-size: 18px; line-height: 1.25; margin-bottom: 7px; }
+        .over-eats { margin-bottom: 7px; padding: 9px 18px 10px; }
+        .over-rank { font-size: 21px; line-height: 1.25; margin-bottom: 4px; }
+        .over-tier { font-size: 18px; padding: 6px 16px; margin-bottom: 4px; }
+        .over-card a.over-compete .compete-win { font-size: 22px; padding: 5px 10px 7px; margin-bottom: 4px; }
+        .over-card a.over-compete .compete-top { margin-bottom: 4px; }
+        .over-best { margin-bottom: 6px; }
+        .rate-box { margin-bottom: 5px; }
+        .rate-label { margin-bottom: 2px; }
+        button.star-btn { font-size: 31px; padding: 5px 6px; }
+      }
       @media (max-height: 684px) {
-        .over-card { padding: 7px 20px; }
-        .over-prize { font-size: 22px; line-height: 1.18; margin-bottom: 4px; }
-        .prize-show { font-size: 31px; line-height: 1.1; margin-top: 5px; padding: 6px 14px 8px; }
-        .over-result { margin-bottom: 5px; }
-        .over-tier { font-size: 17px; padding: 5px 15px; margin-bottom: 3px; }
-        .over-eats { margin-bottom: 6px; padding: 10px 18px 11px; }
-        .over-best { margin-bottom: 4px; }
-        .rate-box { margin-bottom: 3px; }
+        .over-card { padding: 7px 18px; }
+        .over-prize { font-size: 21px; line-height: 1.15; margin-bottom: 4px; }
+        .prize-show { font-size: 29px; line-height: 1.1; margin-top: 4px; padding: 6px 12px 8px; }
+        .over-rank { font-size: 20px; margin-bottom: 3px; }
+        .over-result { font-size: 17.5px; margin-bottom: 4px; }
+        .over-tier { font-size: 17px; padding: 5px 14px; margin-bottom: 3px; }
+        .over-card a.over-compete .compete-win { font-size: 20px; padding: 4px 10px 6px; margin-bottom: 3px; }
+        .over-card a.over-compete .compete-top { font-size: 13px; margin-bottom: 3px; }
+        .over-eats { margin-bottom: 5px; padding: 8px 16px 9px; }
+        .over-best { margin-bottom: 3px; }
+        .rate-box { margin-bottom: 2px; }
+        button.star-btn { font-size: 29px; padding: 4px 6px; }
+      }
+      @media (max-height: 600px) {
+        .over-card { padding: 6px 16px; }
+        .over-prize { font-size: 19px; margin-bottom: 3px; }
+        .prize-show { font-size: 26px; margin-top: 3px; padding: 5px 12px 7px; }
+        .over-rank { font-size: 20px; margin-bottom: 2px; }
+        .over-result { font-size: 16.5px; margin-bottom: 3px; }
+        .over-tier { font-size: 16px; padding: 4px 12px; margin-bottom: 2px; }
+        .over-card a.over-compete .compete-win { font-size: 18px; padding: 4px 8px 5px; margin-bottom: 2px; }
+        .over-card a.over-compete .compete-top { font-size: 12.5px; margin-bottom: 2px; }
+        .over-card a.over-compete .compete-sub { font-size: 12.5px; }
+        .over-eats { margin-bottom: 4px; padding: 7px 14px 8px; }
+        .eats-facts { font-size: 15px; }
+        .over-best { margin-bottom: 2px; }
+        .rate-box { margin-bottom: 1px; }
+        .rate-label { margin-bottom: 1px; }
+        button.star-btn { font-size: 26px; padding: 3px 4px; }
       }
       /* Phone: the SAME three columns as the desktop bar —
          no fold, no re-seating: the left column (the game
@@ -939,11 +1021,10 @@
            share the one box. */
         .toolbar:not(.in-round) #gameBtn,
         .toolbar.in-round #gameBtn {
-          width: 118px;
-          height: 56px;
-          font-size: 18px;
+          width: 100px;
+          font-size: 13.5px;
           letter-spacing: 0.01em;
-          padding: 16px 8px;
+          padding: 8px 8px;
         }
         /* The sound pair at one fixed small size, labels
            fully inside. */
@@ -960,13 +1041,11 @@
            game face over the 48px pair fits inside it. */
         /* Jump stays the big accent target in the middle. */
         #shakeBtn {
-          font-size: 13.5px;
-          padding: 8px 8px;
-          border-radius: 12px;
-          width: 100px;
-          height: 35.5px;
-          min-width: 0;
-          min-height: 0;
+          font-size: 22px;
+          padding: 16px 24px;
+          border-radius: 16px;
+          min-width: 118px;
+          min-height: 56px;
         }
         /* Pack’em stays the larger button on top of the
            right column; Reset stays a little smaller
@@ -1059,7 +1138,7 @@
         <p class="over-result" id="resultLine"></p>
         <p class="over-rank" id="rankLine" hidden></p>
         <p class="over-tier" id="tierLine" hidden></p>
-        <a class="btnlink over-compete" id="competeBtn" href="https://ig.me/m/tbotgamevr" target="_blank" rel="noopener">Top 5!! Win a 3pm check-in<span class="compete-sub">Screenshot &amp; paste here</span></a>
+        <a class="btnlink over-compete" id="competeBtn" href="https://ig.me/m/tbotgamevr" target="_blank" rel="noopener"><span class="compete-top">Top 5!!</span><span class="compete-win">Win a 3pm check-in</span><span class="compete-sub">Screenshot &amp; paste here</span></a>
         <p class="over-best" id="bestLine"></p>
 
         <div class="rate-box">
@@ -4529,6 +4608,32 @@
           promoteElement("no-webaudio"); // no Web Audio in this browser at all
         }
 
+        // PACK'EM CARRIES THE MUSIC (John's ruling,
+        // 2026-10-21): while the player is in Pack'em, the
+        // game's background music is ON and playing —
+        // entering Pack'em starts it if it isn't already
+        // sounding, and it keeps playing there just as it
+        // does in a round. Both Pack'em doors call this from
+        // inside their own tap — the gesture the browser
+        // requires — and it runs the same start pair as the
+        // Start tap: if the setting was off it is switched
+        // on (the label follows), and if the song is already
+        // sounding both calls are no-ops and the beat runs
+        // on. (The first-tap wake and the freeBtn's older
+        // start pair only ever ran the starter, which stands
+        // down while the setting is off — a player who had
+        // switched music off, or whose start was refused or
+        // interrupted, sat in Pack'em in silence. This step
+        // is the ensure: on, then started.)
+        function ensureMusicOn() {
+          if (!musicWanted) {
+            musicWanted = true;
+            setMusicLabel();
+          }
+          tryStartMusic();
+          kickElementAtStart(); // unconfirmed playback hands over to the element inside this same tap
+        }
+
         function stopMusic() {
           disarmWatchdog();
           stopWebAudio();
@@ -4591,7 +4696,22 @@
         tryStartMusic();
         document.addEventListener("pointerdown", function () {
           userGestured = true;
-          if (musicWanted && !musicPlaying) tryStartMusic();
+          if (musicWanted && !musicPlaying) {
+            tryStartMusic();
+            // Pack’em carries the music too (John's ruling,
+            // 2026-10-21: "Pack’em should be on with music"):
+            // the lobby IS Pack’em, and a tap there got only
+            // tryStartMusic — Web Audio's asynchronous start,
+            // which on John's phone never landed, so Pack’em
+            // sat silent while a round (whose Start tap kicks
+            // the element in-gesture) sounded. The same kick
+            // now rides every first tap: if playback is not
+            // yet confirmed, the element takes the song inside
+            // this gesture, in Pack’em exactly as in a round.
+            // Both calls stay no-ops while the song sounds and
+            // whenever the player has switched music off.
+            kickElementAtStart();
+          }
         }, true);
 
         // Read-only status for testing: which engine is live, whether
@@ -5203,7 +5323,12 @@
         // The player's best round lives in localStorage on their
         // own phone: most pieces in, ties broken by most time
         // left. It is never posted anywhere and carries no name.
-        // The card shows it as "Your best: B". Storage can be
+        // The card shows the pair — "Your best: B in · Ts left"
+        // (John's order, 2026-10-21: the best carries its
+        // seconds too) — and the two are stored and replaced
+        // together, never one without the other. A best saved
+        // before the seconds rode along loads with 0s until a
+        // better round stamps the real pair. Storage can be
         // missing or blocked (private browsing); then the best
         // simply lives for the session.
         var BEST_KEY = "playPfpBest";
@@ -5510,9 +5635,15 @@
           rankLine.hidden = true;
           tierLine.hidden = true;
           // The personal best is tracked on this device and shown
-          // on every card: "Your best: B".
+          // on every card with its seconds (John's order,
+          // 2026-10-21: "It should also have your best seconds
+          // as well"): "Your best: B in · Ts left" — the count
+          // and the time left on that best round, stored and
+          // replaced as a pair.
           recordBest(finalIn, timeLeft);
-          bestLine.textContent = "Your best: " + (storedBest ? storedBest.itemsIn : finalIn);
+          bestLine.textContent = storedBest
+            ? "Your best: " + storedBest.itemsIn + " in · " + storedBest.timeLeft + "s left"
+            : "Your best: " + finalIn + " in · " + timeLeft + "s left";
           postScore();
           showEats();
           if (finalIn > 0 && lastEvent) {
@@ -5626,6 +5757,14 @@
         });
         againBtn.addEventListener("click", startGame);
         freeBtn.addEventListener("click", function () {
+          // Pack’em carries the music (John's ruling,
+          // 2026-10-21): entering Pack’em from the card
+          // ensures the music is ON and playing — the
+          // ensure-on step inside this tap switches the
+          // setting on if it was off and starts the song
+          // if it isn't already sounding, and it keeps
+          // playing in Pack’em just as in a round.
+          ensureMusicOn();
           overOverlay.hidden = true;
           // Back at the start screen: the wordmark returns.
           brandLogoEl.hidden = false;
@@ -5642,6 +5781,11 @@
           // can never add a piece mid-round. In Pack’em it adds
           // 3, exactly as it always has.
           if (gameOn) return;
+          // Pack’em carries the music (John's ruling,
+          // 2026-10-21): a Pack’em tap in free play runs
+          // the same ensure-on step inside this tap, so
+          // Pack’em is never the silent mode.
+          ensureMusicOn();
           spawn(3);
         });
         shakeBtn.addEventListener("click", shake);
