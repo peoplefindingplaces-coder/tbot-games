@@ -929,7 +929,7 @@
         <button id="addBtn" type="button">Pack’em</button>
         <button id="resetBtn" type="button">Reset</button>
         <div class="sound-stack" id="soundStack">
-          <button id="musicBtn" type="button">Music: off</button>
+          <button id="musicBtn" type="button">Music: on</button>
           <button id="bouncerBtn" type="button">Bouncer: on</button>
         </div>
       </div>
@@ -1897,6 +1897,49 @@
           trackSeatSource = "idb";
           if (idx !== trackIndex) reseatTrack(idx);
         }
+        // ---------- Element-src re-type (live-build fix, 2026-10-21) ----------
+        // The published single-file build inlines this game's
+        // audio as data:application/octet-stream URIs, and a
+        // media element refuses that type outright ("no
+        // supported sources") even though the bytes are plain
+        // MP3 — on the live page the element engines (the music
+        // pair, the Bouncer voice pool) could therefore never
+        // sound at all; only Web Audio was unaffected, because
+        // its decoder sniffs the bytes. elSrc() re-issues such a
+        // URI's bytes as an audio/mpeg Blob URL and elements are
+        // pointed at that instead; a conversion lands within
+        // moments of load, and any watched element still holding
+        // the raw URI is re-pointed the moment its Blob URL is
+        // ready (a currently-sounding music element is never
+        // swapped mid-play). In the staged build the srcs are
+        // plain assets/*.mp3 paths and elSrc is a pass-through.
+        var elSrcRetyped = {};  // raw data URI -> its audio/mpeg Blob URL, once ready
+        var elSrcPending = {};  // raw data URI -> true while its re-type is in flight
+        var elRetypeWatch = []; // every element pointed through elSrc, for the late swap-in
+        function watchRetype(el) { if (el) elRetypeWatch.push(el); }
+        function repointRetypedElements() {
+          for (var i = 0; i < elRetypeWatch.length; i++) {
+            var el = elRetypeWatch[i];
+            if (!el || !elSrcRetyped[el.src] || el.src === elSrcRetyped[el.src]) continue;
+            if (typeof musicEngine !== "undefined" && musicEngine === "element" && el === elCur && !el.paused) continue; // never swap the sounding playhead
+            el.src = elSrcRetyped[el.src];
+          }
+        }
+        function elSrc(src) {
+          if (!src || src.indexOf("data:application/octet-stream") !== 0) return src;
+          if (elSrcRetyped[src]) return elSrcRetyped[src];
+          if (!elSrcPending[src]) {
+            elSrcPending[src] = true;
+            fetch(src).then(function (r) { return r.blob(); }).then(function (b) {
+              elSrcRetyped[src] = URL.createObjectURL(new Blob([b], { type: "audio/mpeg" }));
+              repointRetypedElements();
+            }).catch(function () { /* the raw URI stands — Web Audio still covers the music */ });
+          }
+          return src; // conversion in flight — the watch list swaps the element when it lands
+        }
+        watchRetype(bgMusic);
+        for (var rti = 0; rti < SKIN.TRACKS.length; rti++) elSrc(SKIN.TRACKS[rti]); // start every track's re-type now
+
         // Move the session's seat to the deep seat's position.
         // The deep answer lands within moments of load — before
         // any tap can start the sound — so in practice this just
@@ -1910,14 +1953,14 @@
           trackIndex = idx;
           skinTrack = SKIN.TRACKS[idx];
           if (musicPlaying || waActive || musicEngine !== "none") return;
-          bgMusic.src = skinTrack;
-          try { bgMusicB.src = skinTrack; } catch (e) { /* twin not built yet — it reads skinTrack when it is */ }
+          bgMusic.src = elSrc(skinTrack);
+          try { bgMusicB.src = elSrc(skinTrack); } catch (e) { /* twin not built yet — it reads skinTrack when it is */ }
           if (musicBuffer) musicBuffer = null; // a decode of the provisional track must not play
           bufferFailed = false; // a provisional decode's failure is not the corrected track's
           loadBuffer();
         }
         var skinTrack = SKIN.TRACKS.length ? SKIN.TRACKS[trackIndex] : "";
-        bgMusic.src = skinTrack;
+        bgMusic.src = elSrc(skinTrack);
 
         var W = 0, H = 0, DPR = 1;
         var floorInset = 0; // the pile's floor: the top edge of the bottom bar — the pieces rest ON the bar (measured in resize)
@@ -2541,7 +2584,8 @@
         for (var bvi = 0; bvi < BOUNCE_POOL_SIZE; bvi++) {
           var bel = new Audio();
           bel.preload = "auto";
-          bel.src = BOUNCE_VOICE_SRC;
+          bel.src = elSrc(BOUNCE_VOICE_SRC);
+          watchRetype(bel);
           bouncePool.push(bel);
         }
         // Bless the pool inside a tap — the only place iOS allows
@@ -3936,32 +3980,33 @@
         //     stops or restarts it: tryStartMusic is a strict
         //     no-op while a start is in flight or a path is live,
         //     and only the Music toggle ever stops it.
-        //  5. The label tells the truth: it reads "Music: on"
-        //     only while playback is CONFIRMED (the Web Audio
-        //     clock actually advancing, or the element engine's
-        //     "playing" event) and "Music: off" at every other
-        //     moment — a fresh page reads off until the first tap
-        //     lands the start, and the song is heard the moment
-        //     the label says on.
-        //  6. The toggle never demands an off→on dance: a tap
-        //     while the music is actually playing turns it off;
-        //     a tap while it is silent — whether the switch stood
-        //     on over a blocked autoplay or off — STARTS it,
+        //  5. The switch names the player's SETTING (John,
+        //     2026-10-21 — "the sound is off when you open the
+        //     game; it should be on"): it opens reading
+        //     "Music: on" — ON is the default wish — and reads
+        //     off only after the player switches it off in this
+        //     session; the wish is never stored, so every open
+        //     starts on again. Playback CONFIRMATION (the Web
+        //     Audio clock actually advancing, or the element
+        //     engine's "playing" event) runs underneath as the
+        //     engines' own state — PFPMusic's playing/engine
+        //     fields tell that truth — and the first tap lands
+        //     the sound the on switch promises, Start game
+        //     hardest of all (kickElementAtStart).
+        //  6. The toggle never demands an off→on dance: it is
+        //     keyed to the setting it shows — a press on "on"
+        //     switches the music off (engines reset whole); a
+        //     press on "off" switches it on and starts the song
         //     inside that tap's own gesture.
-        //  7. The label is RECONCILED, not remembered (mirror
-        //     fix, 2026-10-21 — John: the button can also say off
-        //     while the song is playing, and one press must do
-        //     exactly what the label promises, in either
-        //     direction): a 500 ms truth tick reads the engines'
-        //     ground truth — a playhead actually advancing — and
-        //     walks the label to it. Sound under an off label is
-        //     confirmed on without a restart; an on claim over a
-        //     frozen playhead is dropped and the start re-driven
-        //     (at most twice in a row — never a loop). The switch
-        //     itself is label-keyed: a press on "on" stops
-        //     everything; a press on "off" starts the song — or
-        //     adopts an already-sounding one — so no state, in
-        //     either direction, can demand a second press.
+        //  7. The engines' confirmed state is RECONCILED, not
+        //     remembered: a 500 ms truth tick reads the engines'
+        //     ground truth — a playhead actually advancing —
+        //     and keeps the confirmed state honest underneath
+        //     the switch. A song confirmed playing and then
+        //     frozen is re-driven through a clean reset (at
+        //     most twice in a row — never a loop); a start that
+        //     never confirmed is left to its watchdogs and to
+        //     the first tap, never churned by the tick.
         //
         // The music is ON by default in every fresh session
         // (John, 2026-10-21): musicWanted is an in-memory wish,
@@ -3997,9 +4042,10 @@
         // FALLBACK: it gets exactly one shot per start cycle,
         // only when the element cannot confirm, and if it cannot
         // prove itself either, the cycle ends honestly silent
-        // (label off) and the next tap starts a fresh cycle —
-        // element first again. The label can therefore never
-        // again read "on" over a song nobody hears.
+        // (confirmed state off) and the next tap starts a fresh
+        // cycle — element first again. The engines' confirmed
+        // state therefore never claims a song nobody hears,
+        // while the switch above it names the player's setting.
         var musicWanted = true;   // the player's wish — on by default, off only when the player switches it off
         var startRequested = false; // true once a start has been asked for (load, Start game, first tap, the toggle)
         var musicPlaying = false; // true only once playback is CONFIRMED — the label reads this, never the wish
@@ -4017,10 +4063,20 @@
         }
 
         function setMusicLabel() {
-          // The switch reads the HEARD state: on only while
-          // playback is confirmed, off at every other moment —
-          // it never again says on over silence.
-          musicBtn.textContent = musicPlaying ? "Music: on" : "Music: off";
+          // The switch reads the PLAYER'S SETTING (John,
+          // 2026-10-21 — "the sound is off when you open the
+          // game; it should be on"): ON is the default, the
+          // switch opens reading "Music: on" from the first
+          // paint, and it reads off only after the player
+          // switches it off in this session. Where the browser
+          // still holds the start for want of a first tap, the
+          // label names the setting and the first tap lands
+          // the sound the setting promises (see
+          // unlockMusicOnGesture). musicPlaying stays what it
+          // always was underneath — the engines' CONFIRMED
+          // state, exposed on PFPMusic for checks — it just no
+          // longer drives the words on the switch.
+          musicBtn.textContent = musicWanted ? "Music: on" : "Music: off";
         }
         function confirmPlaying(on) {
           if (musicPlaying !== on) {
@@ -4275,7 +4331,8 @@
         var bgMusicB = new Audio();
         bgMusicB.preload = "auto";
         bgMusicB.loop = false;
-        bgMusicB.src = skinTrack;
+        bgMusicB.src = elSrc(skinTrack);
+        watchRetype(bgMusicB);
         var elCur = bgMusic;    // the element carrying the pair's current pass (engine mode)
         var elAlt = bgMusicB;   // the twin, standing by paused for the next pass
         var elSeamTimer = null; // the engine-mode seam watcher
@@ -4421,7 +4478,7 @@
 
         // Both engines had their shot in this cycle and neither
         // could prove a sound: end the cycle honestly — engines
-        // reset, outcome silent, label off — so the next tap
+        // reset, outcome silent, confirmed state off — so the next tap
         // (the unlock or the switch itself) starts a fresh cycle
         // with the element leading again, instead of either
         // engine holding a state the label would have to lie
@@ -4581,6 +4638,27 @@
         wireEl(bgMusic);
         wireEl(bgMusicB);
 
+        // The Start-tap kick (fix, 2026-10-21): Start game is
+        // the visit's first real tap, and the song must be up
+        // on THAT tap — not whenever a watchdog later notices
+        // a Web Audio start failing into a muted route. So
+        // inside startGame, when playback is not yet
+        // confirmed, the element pair is promoted
+        // SYNCHRONOUSLY, inside the tap's own gesture, through
+        // the same hard handoff a watchdog promotion uses.
+        // If the pair already owns the song it is simply
+        // resumed; if the pair already had its shot this cycle
+        // and genuinely failed, Web Audio's start stands.
+        function kickElementAtStart() {
+          if (!musicWanted || musicPlaying) return;
+          if (musicEngine === "element") {
+            if (elCur.paused) { startElementEngine(); armElWatchdog(); }
+            return;
+          }
+          if (elFailedThisCycle) return;
+          handoffToElement();
+        }
+
         function tryStartMusic() {
           startRequested = true; // armed at load (music on by default), re-asked by Start game / the first tap / the Music switch
           if (!musicWanted) return;
@@ -4695,48 +4773,41 @@
           }
         });
         musicBtn.addEventListener("click", function () {
-          if (musicPlaying) {
-            // The song is genuinely sounding — this tap switches
-            // it off, and stopMusic resets the engines whole.
+          if (musicWanted) {
+            // The switch stands ON — this tap switches the
+            // music off, and stopMusic resets the engines
+            // whole. The off lasts only this session: the wish
+            // is in memory only, never stored, so the next
+            // open starts on again.
             musicWanted = false;
             stopMusic();
+            setMusicLabel();
           } else {
-            // The label reads off — whatever the switch stood at
-            // (off over silence, or off while a start was still
-            // in flight), this tap turns the music ON, inside
-            // this tap's own gesture: the press does exactly
-            // what the label promises, so the off→on dance the
-            // old switch demanded can never happen again. If a
-            // song is already sounding under the off label (the
-            // mirror fault), the press ADOPTS it — the label
-            // flips to on, nothing stops, nothing restarts.
+            // The switch stands OFF — this tap turns the music
+            // ON, inside this tap's own gesture: the press does
+            // exactly what the label promises, so no state can
+            // demand an off→on dance or a second press.
             musicWanted = true;
-            if (actualSoundingNow()) {
-              confirmPlaying(true);
-              setMusicLabel();
-            } else {
-              setMusicLabel();
-              tryStartMusic();
-            }
+            setMusicLabel();
+            if (!actualSoundingNow()) tryStartMusic();
           }
         });
 
-        setMusicLabel(); // the label starts truthful: off until the first tap lands the start (or autoplay proves itself)
+        setMusicLabel(); // the switch opens ON — the default setting — from the first paint
 
         loadBuffer(); // decode now; the first tap then starts instantly
 
         // Music ON by default: ask for playback right away, at
         // load. Where the browser allows autoplay, the seated song
-        // starts on its own in the lobby and the label flips to on
-        // the moment the clock proof lands; where it blocks sound
+        // starts on its own in the lobby; where it blocks sound
         // until a tap, this attempt primes the engines (the Web
         // Audio context exists, the track decodes) and
         // unlockMusicOnGesture above lands the start on the first
-        // tap anywhere. Either way the switch reads the heard
-        // truth from the first paint on.
+        // tap anywhere. Either way the switch reads ON from the
+        // first paint on — the setting the player asked for.
         tryStartMusic();
 
-        // ---------- The truth tick: the label is reconciled ----------
+        // ---------- The truth tick: the engines are reconciled ----------
         // Ground truth, read fresh at every call — never a
         // remembered event: the element is sounding when it is
         // unmuted and not paused; Web Audio is sounding when its
@@ -4746,6 +4817,10 @@
         // the one-voice rule enforced at the reader. The engine
         // seat is repaired to whichever engine is actually
         // sounding, so the tick below judges the right playhead.
+        // The tick reconciles the ENGINES' confirmed state only:
+        // since 2026-10-21 the switch's words name the player's
+        // setting (see setMusicLabel), so a start still waiting
+        // on the browser's first tap is never walked to "off".
         function actualSoundingNow() {
           var elSound = !elCur.paused && !elCur.muted;
           var waSound = !!(waActive && actx && actx.state === "running" && waLive.length);
@@ -4755,18 +4830,19 @@
           return elSound || waSound;
         }
 
-        // Every 500 ms the label is walked to the truth:
-        //  - a song sounding under any label but "on" is
-        //    confirmed on — no restart, no interruption;
-        //  - an "on" claim with nothing sounding is dropped the
-        //    same tick it is seen;
-        //  - an "on" claim whose playhead has not moved for two
-        //    ticks (a stalled element, a frozen context) is
-        //    dropped and the start re-driven once through a
-        //    clean reset — at most two heals in a row, so a
-        //    song that truly cannot play settles honestly off
-        //    (label off, one press starts a fresh cycle) instead
-        //    of churning forever.
+        // Every 500 ms the engines' confirmed state is walked
+        // to the truth:
+        //  - a song sounding is confirmed on underneath — no
+        //    restart, no interruption;
+        //  - a confirmed claim with nothing sounding is dropped
+        //    the same tick it is seen (the switch's words are
+        //    untouched — they name the setting, not the moment);
+        //  - a song that WAS confirmed playing and then froze
+        //    (a stalled element, a dropped context) is re-driven
+        //    once through a clean reset — at most two heals in
+        //    a row. A start that never confirmed is never healed
+        //    from here: it is either still waiting on the first
+        //    tap, or its own watchdogs own its failure.
         // Transitions (a handoff in flight) and a switched-off
         // player are left strictly alone.
         var truthHeals = 0;      // consecutive re-drives since the last confirmed play
@@ -4777,7 +4853,7 @@
           var sounding = actualSoundingNow();
           if (!sounding) {
             lastSoundPos = -1; stillTicks = 0;
-            if (musicPlaying) confirmPlaying(false); // claimed on, nothing sounding — the label catches down at once
+            if (musicPlaying) confirmPlaying(false); // confirmed claim, nothing sounding — the engines' state catches down at once; the switch keeps naming the setting
             return;
           }
           var pos = -1;
@@ -4786,9 +4862,9 @@
           if (pos >= 0 && lastSoundPos >= 0 && pos === lastSoundPos) stillTicks++;
           else stillTicks = 0;
           lastSoundPos = pos;
-          if (stillTicks >= 2) {
-            // Claimed sound, frozen playhead: an "on" here
-            // would be a lie. Drop it and re-drive the start
+          if (stillTicks >= 2 && musicOutcome === "playing") {
+            // A song that WAS confirmed playing has frozen
+            // mid-flight: drop the claim and re-drive the start
             // through a full reset — element first again.
             stillTicks = 0; lastSoundPos = -1;
             confirmPlaying(false);
@@ -4797,11 +4873,11 @@
               stopMusic();
               tryStartMusic();
             } else {
-              musicOutcome = "silent"; // two re-drives did not take — settle honestly off; one press starts fresh
+              musicOutcome = "silent"; // two re-drives did not take — the next tap starts a fresh cycle
             }
             return;
           }
-          if (!musicPlaying) confirmPlaying(true); // sound under an off label — the label catches up, nothing restarts
+          if (!musicPlaying) confirmPlaying(true); // sound is up — the confirmed state catches up, nothing restarts
         }, 500);
 
         // Read-only status for testing: which engine is live, whether
@@ -5544,6 +5620,7 @@
           // the scorebook is disabled this is a no-op.)
           if (!roundPosted && lastRound) postScore();
           tryStartMusic();
+          kickElementAtStart(); // the Start tap itself promotes the element pair if the song is not confirmed yet — the music is up on this tap, not a watchdog later
           primeChimeAudio(); // unlock the cha-ching under this tap, before any capture can happen
           // Start does one thing now: start the round, right here.
           // No tab opens; the trip to the event lives on the
