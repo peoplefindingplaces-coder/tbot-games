@@ -527,10 +527,10 @@
         overflow-y: auto;
       }
       .over-prize {
-        font-size: 30px;
+        font-size: 27px;
         font-weight: 800;
         line-height: 1.25;
-        margin: 0 0 8px;
+        margin: 0 0 6px;
       }
       .over-prize[hidden] { display: none; }
       /* The prize title sits on its own dark plate: gold straight
@@ -545,13 +545,13 @@
          event name fits the card without clipping. */
       .prize-show {
         display: block;
-        margin-top: 8px;
+        margin-top: 5px;
         background: #0b1026;
         color: #ffbe1a;
-        font-size: 45px;
+        font-size: 38px;
         font-weight: 900;
         line-height: 1.15;
-        padding: 12px 14px 14px;
+        padding: 9px 14px 10px;
         border-radius: 14px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
         overflow-wrap: break-word;
@@ -581,10 +581,10 @@
          One pick per card; the pick rotates through this home's
          list across finished rounds (see showEats). */
       .over-eats {
-        margin: 10px 0;
+        margin: 7px 0;
         background: #0b1026;
         border-radius: 12px;
-        padding: 16px 18px;
+        padding: 10px 18px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
       }
       .over-eats[hidden] { display: none; }
@@ -622,12 +622,12 @@
         font-weight: 800;
         color: var(--ink);
         line-height: 1.3;
-        margin: 0 0 10px;
+        margin: 0 0 7px;
       }
       .over-rank {
         font-size: 23px;
         font-weight: 900;
-        margin: 0 0 6px;
+        margin: 0 0 4px;
         line-height: 1.3;
       }
       .over-rank[hidden] { display: none; }
@@ -668,7 +668,7 @@
         font-size: 15.5px;
         font-weight: 700;
         line-height: 1.35;
-        margin: 0 0 8px;
+        margin: 0 0 5px;
       }
       .over-status[hidden] { display: none; }
       /* Link-buttons: anchors that wear the plain button face
@@ -726,13 +726,27 @@
         font-size: 12px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: -6px 0 6px;
+        margin: -6px 0 4px;
+      }
+      .over-card a.over-book {
+        display: block;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.15;
+        text-align: center;
+        text-decoration: none;
+        padding: 8px 14px;
+        min-height: 40px;
+        border-radius: 14px;
+        margin: 2px 0 8px;
+        background: #ffbe1a;
+        color: #111318;
       }
       .over-best {
         font-size: 13px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: 0 0 18px;
+        margin: 0 0 8px;
       }
       /* The end card's actions: Pack’em and Play again side by
          side in one row, each about half the card's width, at the
@@ -752,11 +766,11 @@
         flex: 1 1 0;
         min-width: 0;
       }
-      .rate-box { margin: 0 0 10px; }
+      .rate-box { margin: 0 0 6px; }
       .rate-label {
         font-size: 14px;
         font-weight: 700;
-        margin: 0 0 4px;
+        margin: 0 0 2px;
       }
       .stars {
         display: flex;
@@ -804,9 +818,9 @@
          and Pack’em / Play again keep their 144×52. Taller
          screens never see this tier. */
       @media (max-height: 899px) {
-        .over-card { padding: 4px 20px; }
-        .over-prize { font-size: 24px; line-height: 1.15; margin-bottom: 3px; }
-        .prize-show { font-size: 36px; margin-top: 4px; padding: 7px 12px 8px; }
+        .over-card { padding: 2px 20px; }
+        .over-prize { font-size: 22px; line-height: 1.15; margin-bottom: 3px; }
+        .prize-show { font-size: 33px; margin-top: 4px; padding: 5px 12px 6px; }
         /* The eats plate does NOT step down in this tier: it
            keeps its full enlarged size (20px extra-bold
            "GOOD EATS NEARBY" lead, 26px name, 16px subline,
@@ -815,15 +829,15 @@
            instead — card padding, the plate's own margins,
            and the result/rank gaps each give back a pixel
            or two, totalling the lead's added height. */
-        .over-eats { margin: 4px 0; padding: 16px 18px; }
+        .over-eats { margin: 4px 0; padding: 9px 18px; }
         .eats-lead { font-size: 20px; font-weight: 800; }
-        .over-result { font-size: 20px; margin-bottom: 3px; }
+        .over-result { font-size: 20px; margin-bottom: 2px; }
         .over-rank { font-size: 23px; margin-bottom: 2px; }
-        .over-badge { margin: 1px 0 3px; padding: 5px 16px; }
-        .over-status { line-height: 1.25; margin-bottom: 3px; }
+        .over-badge { margin: 0 0 2px; padding: 3px 16px; }
+        .over-status { line-height: 1.25; margin-bottom: 2px; }
         .over-card a.over-compete { margin: 1px 0 4px; }
         .over-best { margin-bottom: 4px; }
-        .rate-box { margin-bottom: 3px; }
+        .rate-box { margin-bottom: 2px; }
         .rate-label { margin-bottom: 2px; }
         button.star-btn { font-size: 32px; padding: 4px 7px; min-height: 40px; }
         .rate-thanks { margin-top: 3px; }
@@ -1054,6 +1068,7 @@
           <a class="eats-name" id="eatsName" href="#" target="_blank" rel="noopener"></a>
           <p class="eats-sub" id="eatsSub"></p>
         </div>
+        <a class="btnlink over-book" id="bookBtn" href="https://www.airbnb.com/rooms/1171732790680518125" target="_blank" rel="noopener">View our home</a>
         <div class="over-btns">
           <button id="freeBtn" type="button">Pack’em</button>
           <button class="primary" id="againBtn" type="button">Play again</button>
