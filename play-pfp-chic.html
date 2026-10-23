@@ -626,10 +626,10 @@
         overflow-y: auto;
       }
       .over-prize {
-        font-size: 25px;
+        font-size: 23.5px;
         font-weight: 800;
         line-height: 1.22;
-        margin: 0 0 5px;
+        margin: 0 0 3px;
       }
       .over-prize[hidden] { display: none; }
       /* The prize title sits on its own dark plate: gold straight
@@ -644,13 +644,13 @@
          event name fits the card without clipping. */
       .prize-show {
         display: block;
-        margin-top: 6px;
+        margin-top: 4px;
         background: #0b1026;
         color: #ffbe1a;
         font-size: 36px;
         font-weight: 900;
         line-height: 1.15;
-        padding: 8px 12px 9px;
+        padding: 6px 12px 7px;
         border-radius: 14px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
         overflow-wrap: break-word;
@@ -667,12 +667,12 @@
         font-weight: 800;
         color: var(--ink);
         line-height: 1.27;
-        margin: 0 0 6px;
+        margin: 0 0 4px;
       }
       .over-rank {
         font-size: 22px;
         font-weight: 900;
-        margin: 0 0 5px;
+        margin: 0 0 3px;
         line-height: 1.27;
       }
       .over-rank[hidden] { display: none; }
@@ -706,7 +706,7 @@
         border: 3px solid #14181f;
         border-radius: 999px;
         padding: 6px 18px;
-        margin: 0 0 6px;
+        margin: 0 0 4px;
         box-shadow: 0 6px 20px rgba(255, 190, 26, 0.55), 0 3px 10px rgba(0, 0, 0, 0.35);
       }
       .over-tier[hidden] { display: none; }
@@ -750,7 +750,7 @@
         padding: 10px 14px;
         min-height: 42px;
         border-radius: 14px;
-        margin: 1px 0 4px;
+        margin: 1px 0 2px;
       }
       /* The button's second line, exactly as TBOT's: the
          "Top 5!! Win a 3pm check-in" line stands on its own
@@ -768,13 +768,27 @@
         font-size: 12px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: -6px 0 6px;
+        margin: -6px 0 4px;
+      }
+      .over-card a.over-book {
+        display: block;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.15;
+        text-align: center;
+        text-decoration: none;
+        padding: 7px 14px;
+        min-height: 38px;
+        border-radius: 14px;
+        margin: 2px 0 8px;
+        background: #ffbe1a;
+        color: #111318;
       }
       .over-best {
         font-size: 13px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: 0 0 8px;
+        margin: 0 0 4px;
       }
       /* The nearby-eats block: one highly-rated restaurant near
          this home (see RESTAURANTS and showEats), seated at the
@@ -794,11 +808,11 @@
          the bigger plate by tightening the card's other spacing
          instead. */
       .over-eats {
-        margin: 0 0 8px;
+        margin: 0 0 5px;
         background: #0b1026;
         border-radius: 14px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
-        padding: 12px 18px;
+        padding: 8px 18px;
       }
       .eats-kicker {
         font-size: 20px;
@@ -843,7 +857,7 @@
         flex: 1 1 0;
         min-width: 0;
       }
-      .rate-box { margin: 0 0 6px; }
+      .rate-box { margin: 0 0 3px; }
       .rate-label {
         font-size: 14px;
         font-weight: 700;
@@ -1158,6 +1172,7 @@
           <a class="eats-name" id="eatsName" href="#" target="_blank" rel="noopener"></a>
           <p class="eats-facts" id="eatsFacts"></p>
         </div>
+        <a class="btnlink over-book" id="bookBtn" href="https://www.airbnb.com/rooms/1416316193228976537" target="_blank" rel="noopener">View our home</a>
         <div class="over-btns">
           <button id="freeBtn" type="button">Pack’em</button>
           <button class="primary" id="againBtn" type="button">Play again</button>
