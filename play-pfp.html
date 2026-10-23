@@ -557,6 +557,7 @@
         overflow-wrap: break-word;
         text-decoration: none;
       }
+      .prize-show.prize-long { font-size: 23.5px; }
       a.prize-show:active { transform: scale(0.98); }
       /* The nearby-eats block: on a WINNING card it sits
          directly above the Pack’em / Play again row, which
@@ -849,6 +850,7 @@
         .over-card { padding: 2px 20px; }
         .over-prize { font-size: 20px; line-height: 1.15; margin-bottom: 3px; }
         .prize-show { font-size: 30px; margin-top: 4px; padding: 3px 12px 4px; }
+      .prize-show.prize-long { font-size: 20px; }
         /* The eats plate does NOT step down in this tier: it
            keeps its full enlarged size (20px extra-bold
            "GOOD EATS NEARBY" lead, 26px name, 16px subline,
@@ -6010,10 +6012,19 @@
         // the plate itself IS the link to the event (this game's
         // card rule). The player's own tap makes the trip, so
         // nothing has to be opened for them back at Start.
+        function fitPrizeName() {
+          prizeShow.classList.remove("prize-long");
+          var cs = getComputedStyle(prizeShow);
+          var lh = parseFloat(cs.lineHeight);
+          if (!isFinite(lh) || lh <= 0) return;
+          var lines = Math.round((prizeShow.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / lh);
+          if (lines >= 3) prizeShow.classList.add("prize-long");
+        }
         function showEvent(event) {
           prizeShow.textContent = event.name;
           prizeShow.href = event.link;
           prizeLine.hidden = false;
+          fitPrizeName(); requestAnimationFrame(fitPrizeName);
           againBtn.classList.remove("primary");
           showEats();
         }
