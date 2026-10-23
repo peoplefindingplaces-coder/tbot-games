@@ -656,6 +656,7 @@
         overflow-wrap: break-word;
         text-decoration: none;
       }
+      .prize-show.prize-long { font-size: 19.5px; }
       a.prize-show:active { transform: scale(0.98); }
       /* The result line, enlarged: the round's figures — pieces
          in, clock — in noticeably bigger, heavier type (~21px,
@@ -949,6 +950,7 @@
         .over-card { padding: 10px 20px; }
         .over-prize { font-size: 26px; margin-bottom: 7px; }
         .prize-show { font-size: 39px; margin-top: 7px; padding: 9px 14px 11px; }
+      .prize-show.prize-long { font-size: 26px; }
         .over-result { font-size: 20px; margin-bottom: 1px; }
         .over-tier { font-size: 19px; padding: 7px 19px; margin-bottom: 6px; }
         .over-eats { margin-bottom: 8px; }
@@ -960,6 +962,7 @@
         .over-card { padding: 9px 20px; }
         .over-prize { font-size: 21px; line-height: 1.2; margin-bottom: 6px; }
         .prize-show { font-size: 29px; line-height: 1.12; margin-top: 6px; padding: 7px 14px 9px; }
+      .prize-show.prize-long { font-size: 19.5px; }
         .over-result { font-size: 19px; line-height: 1.26; margin-bottom: 1px; }
         .over-eats { margin-bottom: 8px; padding: 11px 18px 12px; }
         .over-rank { font-size: 18.5px; line-height: 1.27; margin-bottom: 1px; }
@@ -973,6 +976,7 @@
         .over-card { padding: 7px 20px; }
         .over-prize { font-size: 19px; line-height: 1.18; margin-bottom: 4px; }
         .prize-show { font-size: 26px; line-height: 1.1; margin-top: 5px; padding: 4px 14px 6px; }
+      .prize-show.prize-long { font-size: 17.5px; }
         .over-result { margin-bottom: 1px; }
         .over-tier { font-size: 17px; padding: 5px 15px; margin-bottom: 3px; }
         .over-eats { margin-bottom: 6px; padding: 10px 18px 11px; }
@@ -5700,10 +5704,19 @@
         // the plate itself IS the link to the event (this game's
         // card rule). The player's own tap makes the trip, so
         // nothing has to be opened for them back at Start.
+        function fitPrizeName() {
+          prizeShow.classList.remove("prize-long");
+          var cs = getComputedStyle(prizeShow);
+          var lh = parseFloat(cs.lineHeight);
+          if (!isFinite(lh) || lh <= 0) return;
+          var lines = Math.round((prizeShow.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / lh);
+          if (lines >= 3) prizeShow.classList.add("prize-long");
+        }
         function showEvent(event) {
           prizeShow.textContent = event.name;
           prizeShow.href = event.link;
           prizeLine.hidden = false;
+          fitPrizeName(); requestAnimationFrame(fitPrizeName);
           againBtn.classList.remove("primary");
         }
 
