@@ -626,7 +626,7 @@
         overflow-y: auto;
       }
       .over-prize {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 800;
         line-height: 1.22;
         margin: 0 0 3px;
@@ -647,10 +647,10 @@
         margin-top: 4px;
         background: #0b1026;
         color: #ffbe1a;
-        font-size: 32px;
+        font-size: 29px;
         font-weight: 900;
         line-height: 1.15;
-        padding: 6px 12px 7px;
+        padding: 4px 12px 5px;
         border-radius: 14px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
         overflow-wrap: break-word;
@@ -667,12 +667,12 @@
         font-weight: 800;
         color: var(--ink);
         line-height: 1.27;
-        margin: 0 0 4px;
+        margin: 0 0 1px;
       }
       .over-rank {
         font-size: 22px;
         font-weight: 900;
-        margin: 0 0 2px;
+        margin: 0 0 1px;
         line-height: 1.27;
       }
       .over-rank[hidden] { display: none; }
@@ -768,7 +768,7 @@
         font-size: 12px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: -6px 0 4px;
+        margin: -6px 0 2px;
       }
       .over-card a.over-book {
         display: block;
@@ -788,26 +788,28 @@
         display: flex;
         gap: 10px;
         align-items: stretch;
-        margin: 3px 0;
+        margin: 2px 0;
       }
       .over-mealrow .over-eats {
         margin: 0;
         flex: 1 1 auto;
         padding-left: 12px;
         padding-right: 12px;
-              padding-top: 8px;
-        padding-bottom: 8px;
+              padding-top: 3px;
+        padding-bottom: 3px;
       }
       .over-card .over-mealrow a.over-book {
-        flex: 0 0 104px;
+        flex: 0 0 136px;
         margin: 0;
         min-height: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 8px 6px;
-      }
+        padding: 6px 4px;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.12; }
       .over-mealrow:has(.over-eats[hidden]) a.over-book {
         flex: 1 1 auto;
       }
@@ -815,7 +817,7 @@
         font-size: 13px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: 0 0 4px;
+        margin: 0 0 2px;
       }
       /* The nearby-eats block: one highly-rated restaurant near
          this home (see RESTAURANTS and showEats), seated at the
@@ -847,12 +849,12 @@
         letter-spacing: 0.14em;
         color: #aab2cc;
         margin: 0 0 2px;
-      }
+        line-height: 1.1; }
       a.eats-name {
         display: inline-block;
         font-size: 26px;
         font-weight: 900;
-        line-height: 1.25;
+        line-height: 1.05;
         color: #ffbe1a;
         text-decoration: underline;
         text-underline-offset: 3px;
@@ -863,7 +865,7 @@
         font-weight: 600;
         color: #cfd4e6;
         margin: 2px 0 0;
-        line-height: 1.35;
+        line-height: 1.12;
       }
       .eats-facts .eats-stars { color: var(--gold); font-weight: 800; }
       /* The end card's actions: Pack’em and Play again side by
@@ -884,11 +886,11 @@
         flex: 1 1 0;
         min-width: 0;
       }
-      .rate-box { margin: 0 0 3px; }
+      .rate-box { margin: 0 0 1px; }
       .rate-label {
         font-size: 14px;
         font-weight: 700;
-        margin: 0 0 3px;
+        margin: 0 0 1px;
       }
       .stars {
         display: flex;
@@ -945,37 +947,37 @@
          any of this. */
       @media (max-height: 830px) {
         .over-card { padding: 10px 20px; }
-        .over-prize { font-size: 28px; margin-bottom: 7px; }
-        .prize-show { font-size: 42px; margin-top: 7px; padding: 11px 14px 13px; }
-        .over-result { font-size: 20px; margin-bottom: 9px; }
+        .over-prize { font-size: 26px; margin-bottom: 7px; }
+        .prize-show { font-size: 39px; margin-top: 7px; padding: 9px 14px 11px; }
+        .over-result { font-size: 20px; margin-bottom: 1px; }
         .over-tier { font-size: 19px; padding: 7px 19px; margin-bottom: 6px; }
         .over-eats { margin-bottom: 8px; }
-        .over-best { margin-bottom: 8px; }
-        .rate-box { margin-bottom: 8px; }
+        .over-best { margin-bottom: 2px; }
+        .rate-box { margin-bottom: 1px; }
         button.star-btn { font-size: 38px; padding: 7px; }
       }
       @media (max-height: 779px) {
         .over-card { padding: 9px 20px; }
-        .over-prize { font-size: 24px; line-height: 1.2; margin-bottom: 6px; }
-        .prize-show { font-size: 34px; line-height: 1.12; margin-top: 6px; padding: 9px 14px 11px; }
-        .over-result { font-size: 19px; line-height: 1.26; margin-bottom: 8px; }
+        .over-prize { font-size: 21px; line-height: 1.2; margin-bottom: 6px; }
+        .prize-show { font-size: 29px; line-height: 1.12; margin-top: 6px; padding: 7px 14px 9px; }
+        .over-result { font-size: 19px; line-height: 1.26; margin-bottom: 1px; }
         .over-eats { margin-bottom: 8px; padding: 11px 18px 12px; }
-        .over-rank { font-size: 18.5px; line-height: 1.27; margin-bottom: 4px; }
+        .over-rank { font-size: 18.5px; line-height: 1.27; margin-bottom: 1px; }
         .over-tier { font-size: 18.5px; padding: 6px 17px; margin-bottom: 4px; }
-        .over-best { margin-bottom: 7px; }
-        .rate-box { margin-bottom: 6px; }
-        .rate-label { margin-bottom: 3px; }
+        .over-best { margin-bottom: 2px; }
+        .rate-box { margin-bottom: 1px; }
+        .rate-label { margin-bottom: 1px; }
         button.star-btn { font-size: 34px; padding: 6px 7px; }
       }
       @media (max-height: 684px) {
         .over-card { padding: 7px 20px; }
-        .over-prize { font-size: 22px; line-height: 1.18; margin-bottom: 4px; }
-        .prize-show { font-size: 31px; line-height: 1.1; margin-top: 5px; padding: 6px 14px 8px; }
-        .over-result { margin-bottom: 5px; }
+        .over-prize { font-size: 19px; line-height: 1.18; margin-bottom: 4px; }
+        .prize-show { font-size: 26px; line-height: 1.1; margin-top: 5px; padding: 4px 14px 6px; }
+        .over-result { margin-bottom: 1px; }
         .over-tier { font-size: 17px; padding: 5px 15px; margin-bottom: 3px; }
         .over-eats { margin-bottom: 6px; padding: 10px 18px 11px; }
-        .over-best { margin-bottom: 4px; }
-        .rate-box { margin-bottom: 3px; }
+        .over-best { margin-bottom: 2px; }
+        .rate-box { margin-bottom: 1px; }
       }
       /* Phone: the SAME three columns as the desktop bar —
          no fold, no re-seating: the left column (the game
