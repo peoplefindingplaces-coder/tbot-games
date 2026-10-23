@@ -752,6 +752,33 @@
         background: #ffbe1a;
         color: #111318;
       }
+      .over-mealrow {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+        margin: 4px 0;
+      }
+      .over-mealrow .over-eats {
+        margin: 0;
+        flex: 1 1 auto;
+        padding-left: 12px;
+        padding-right: 12px;
+              padding-top: 7px;
+        padding-bottom: 7px;
+      }
+      .over-card .over-mealrow a.over-book {
+        flex: 0 0 104px;
+        margin: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 8px 6px;
+      }
+      .over-mealrow:has(.over-eats[hidden]) a.over-book {
+        flex: 1 1 auto;
+      }
       .over-best {
         font-size: 13px;
         font-weight: 600;
@@ -1085,12 +1112,14 @@
           </div>
           <p class="rate-thanks" id="rateThanks" hidden></p>
         </div>
+        <div class="over-mealrow">
         <div class="over-eats" id="eatsBlock" hidden>
           <p class="eats-lead">GOOD EATS NEARBY</p>
           <a class="eats-name" id="eatsName" href="#" target="_blank" rel="noopener"></a>
           <p class="eats-sub" id="eatsSub"></p>
         </div>
         <a class="btnlink over-book" id="bookBtn" href="https://www.airbnb.com/rooms/1450360362429561606" target="_blank" rel="noopener">View our home</a>
+        </div>
         <div class="over-btns">
           <button id="freeBtn" type="button">Pack’em</button>
           <button class="primary" id="againBtn" type="button">Play again</button>
