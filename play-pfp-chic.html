@@ -821,6 +821,29 @@
       .over-mealrow:has(.over-eats[hidden]) a.over-book {
         flex: 1 1 auto;
       }
+      /* View our home: thin red line over the food plate (John, Oct 23, 2026) */
+      .over-mealrow {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .over-card .over-mealrow a.over-book {
+        order: -1;
+        flex: none;
+        width: 100%;
+        min-height: 0;
+        padding: 7px 10px;
+        font-size: 17px;
+        font-weight: 900;
+        line-height: 1.15;
+      }
+      .over-mealrow:has(.over-eats[hidden]) a.over-book {
+        flex: none;
+        width: 100%;
+      }
+      .over-mealrow .over-eats {
+        flex: none;
+        width: 100%;
+      }
       .over-best {
         font-size: 13px;
         font-weight: 600;
