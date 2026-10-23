@@ -574,6 +574,7 @@
         overflow-wrap: break-word;
         text-decoration: none;
       }
+      .prize-show.prize-long { font-size: 20.5px; }
       a.prize-show:active { transform: scale(0.98); }
       /* The nearby-restaurants block: at the foot of the card,
          directly above the Play again / Pack’em buttons (the
@@ -858,6 +859,7 @@
         .over-card { padding: 10px 20px; }
         .over-prize { font-size: 26px; margin-bottom: 5px; }
         .prize-show { font-size: 37px; margin-top: 6px; padding: 7px 12px 8px; }
+      .prize-show.prize-long { font-size: 24.5px; }
         .over-result { margin-bottom: 1px; }
         .over-badge { font-size: 14.5px; padding: 2px 14px; margin-bottom: 7px;
         margin: 0 0 1px; }
@@ -877,6 +879,7 @@
         .over-card { padding: 10px 20px; }
         .over-prize { font-size: 23px; line-height: 1.2; margin-bottom: 5px; }
         .prize-show { font-size: 31px; margin-top: 6px; padding: 6px 11; }
+      .prize-show.prize-long { font-size: 20.5px; }
         .over-result { font-size: 20px; margin-bottom: 1px; }
         .over-rank { font-size: 19px; margin-bottom: 1px; }
         .over-badge { font-size: 14px; padding: 2px 14px; margin-bottom: 6px;
@@ -900,6 +903,7 @@
         .over-card { padding: 8px 16px; }
         .over-prize { font-size: 19px; line-height: 1.2; margin-bottom: 3px; }
         .prize-show { font-size: 26px; margin-top: 4px; padding: 5px 11px 6px; }
+      .prize-show.prize-long { font-size: 17.5px; }
         .over-result { font-size: 19px; margin-bottom: 1px; }
         .over-rank { font-size: 18px; line-height: 1.25; margin-bottom: 1px; }
         .over-badge { font-size: 13px; padding: 2px 14px; margin-bottom: 5px;
@@ -5366,10 +5370,19 @@
         // the plate itself IS the link to the event (this game's
         // card rule). The player's own tap makes the trip, so
         // nothing has to be opened for them back at Start.
+        function fitPrizeName() {
+          prizeShow.classList.remove("prize-long");
+          var cs = getComputedStyle(prizeShow);
+          var lh = parseFloat(cs.lineHeight);
+          if (!isFinite(lh) || lh <= 0) return;
+          var lines = Math.round((prizeShow.offsetHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)) / lh);
+          if (lines >= 3) prizeShow.classList.add("prize-long");
+        }
         function showEvent(event) {
           prizeShow.textContent = event.name;
           prizeShow.href = event.link;
           prizeLine.hidden = false;
+          fitPrizeName(); requestAnimationFrame(fitPrizeName);
           againBtn.classList.remove("primary");
           // The "Good eats nearby" block rides the foot of
           // the winning card, directly above the buttons: this
