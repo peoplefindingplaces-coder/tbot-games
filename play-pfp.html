@@ -513,7 +513,7 @@
            line, plate and button together, wording and
            treatment untouched; the card stays centred and
            still fits one screen with more air around it. */
-        transform: scale(0.98);
+        transform: scale(0.905);
       /* Taller viewports (windows over ~900px tall): the
          stepped-down tier below lets go and the card takes its
          full grand sizes — in its fullest state (four-line prize
@@ -527,7 +527,7 @@
         overflow-y: auto;
       }
       .over-prize {
-        font-size: 27px;
+        font-size: 25px;
         font-weight: 800;
         line-height: 1.25;
         margin: 0 0 6px;
@@ -548,10 +548,10 @@
         margin-top: 5px;
         background: #0b1026;
         color: #ffbe1a;
-        font-size: 38px;
+        font-size: 35px;
         font-weight: 900;
         line-height: 1.15;
-        padding: 9px 14px 10px;
+        padding: 7px 14px 8px;
         border-radius: 14px;
         box-shadow: 0 4px 14px rgba(4, 6, 16, 0.45);
         overflow-wrap: break-word;
@@ -593,13 +593,13 @@
         font-weight: 800;
         color: #c3cdee;
         margin: 0 0 2px;
-        line-height: 1.25;
+        line-height: 1.1;
       }
       .eats-name {
         display: block;
         font-size: 26px;
         font-weight: 900;
-        line-height: 1.2;
+        line-height: 1.05;
         color: #ffbe1a;
         text-decoration: none;
         overflow-wrap: break-word;
@@ -609,7 +609,7 @@
         font-size: 16px;
         font-weight: 600;
         color: #c3cdee;
-        line-height: 1.3;
+        line-height: 1.12;
         margin: 1px 0 0;
       }
       /* The result line, enlarged: the round's figures — pieces
@@ -622,12 +622,12 @@
         font-weight: 800;
         color: var(--ink);
         line-height: 1.3;
-        margin: 0 0 7px;
+        margin: 0 0 1px;
       }
       .over-rank {
         font-size: 23px;
         font-weight: 900;
-        margin: 0 0 4px;
+        margin: 0 0 1px;
         line-height: 1.3;
       }
       .over-rank[hidden] { display: none; }
@@ -650,10 +650,10 @@
         font-size: 16px;
         font-weight: 900;
         line-height: 1.25;
-        padding: 7px 18px;
+        padding: 2px 14px;
         border: 3px solid #0b1026;
         border-radius: 999px;
-        margin: 2px 0 8px;
+        margin: 0 0 1px;
       }
       .over-badge[hidden] { display: none; }
       /* The competition status line, under the rank line and
@@ -668,7 +668,7 @@
         font-size: 15.5px;
         font-weight: 700;
         line-height: 1.35;
-        margin: 0 0 5px;
+        margin: 0 0 1px;
       }
       .over-status[hidden] { display: none; }
       /* Link-buttons: anchors that wear the plain button face
@@ -709,7 +709,7 @@
         padding: 10px 14px;
         min-height: 42px;
         border-radius: 14px;
-        margin: 2px 0 10px;
+        margin: 2px 0 2px;
       }
       /* The button's second line, exactly as TBOT's: the
          "Top 5!! Win a 3pm check-in" line stands on its own
@@ -726,7 +726,7 @@
         font-size: 12px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: -6px 0 4px;
+        margin: -6px 0 2px;
       }
       .over-card a.over-book {
         display: block;
@@ -746,24 +746,27 @@
         display: flex;
         gap: 10px;
         align-items: stretch;
-        margin: 8px 0;
+        margin: 2px 0;
       }
       .over-mealrow .over-eats {
         margin: 0;
         flex: 1 1 auto;
         padding-left: 12px;
         padding-right: 12px;
-      }
+        padding-top: 3px;
+        padding-bottom: 3px; }
       .over-card .over-mealrow a.over-book {
-        flex: 0 0 104px;
+        flex: 0 0 136px;
         margin: 0;
         min-height: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 8px 6px;
-      }
+        padding: 6px 4px;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.12; }
       .over-mealrow:has(.over-eats[hidden]) a.over-book {
         flex: 1 1 auto;
       }
@@ -771,7 +774,7 @@
         font-size: 13px;
         font-weight: 600;
         color: var(--ink-soft);
-        margin: 0 0 8px;
+        margin: 0 0 2px;
       }
       /* The end card's actions: Pack’em and Play again side by
          side in one row, each about half the card's width, at the
@@ -791,11 +794,11 @@
         flex: 1 1 0;
         min-width: 0;
       }
-      .rate-box { margin: 0 0 6px; }
+      .rate-box { margin: 0 0 1px; }
       .rate-label {
         font-size: 14px;
         font-weight: 700;
-        margin: 0 0 2px;
+        margin: 0 0 1px;
       }
       .stars {
         display: flex;
@@ -844,8 +847,8 @@
          screens never see this tier. */
       @media (max-height: 899px) {
         .over-card { padding: 2px 20px; }
-        .over-prize { font-size: 22px; line-height: 1.15; margin-bottom: 3px; }
-        .prize-show { font-size: 33px; margin-top: 4px; padding: 5px 12px 6px; }
+        .over-prize { font-size: 20px; line-height: 1.15; margin-bottom: 3px; }
+        .prize-show { font-size: 30px; margin-top: 4px; padding: 3px 12px 4px; }
         /* The eats plate does NOT step down in this tier: it
            keeps its full enlarged size (20px extra-bold
            "GOOD EATS NEARBY" lead, 26px name, 16px subline,
@@ -855,15 +858,16 @@
            and the result/rank gaps each give back a pixel
            or two, totalling the lead's added height. */
         .over-eats { margin: 4px 0; padding: 9px 18px; }
-        .eats-lead { font-size: 20px; font-weight: 800; }
-        .over-result { font-size: 20px; margin-bottom: 2px; }
-        .over-rank { font-size: 23px; margin-bottom: 2px; }
-        .over-badge { margin: 0 0 2px; padding: 3px 16px; }
-        .over-status { line-height: 1.25; margin-bottom: 2px; }
-        .over-card a.over-compete { margin: 1px 0 4px; }
-        .over-best { margin-bottom: 4px; }
-        .rate-box { margin-bottom: 2px; }
-        .rate-label { margin-bottom: 2px; }
+        .eats-lead { font-size: 20px; font-weight: 800;
+        line-height: 1.1; }
+        .over-result { font-size: 20px; margin-bottom: 1px; }
+        .over-rank { font-size: 23px; margin-bottom: 1px; }
+        .over-badge { margin: 0 0 1px; padding: 2px 14px; }
+        .over-status { line-height: 1.25; margin-bottom: 1px; }
+        .over-card a.over-compete { margin: 1px 0 2px; }
+        .over-best { margin-bottom: 2px; }
+        .rate-box { margin-bottom: 1px; }
+        .rate-label { margin-bottom: 1px; }
         button.star-btn { font-size: 32px; padding: 4px 7px; min-height: 40px; }
         .rate-thanks { margin-top: 3px; }
       }
