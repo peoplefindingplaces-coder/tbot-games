@@ -422,7 +422,7 @@
          match — an easier, more confident tap target
          mid-round, seated dead centre of the bar. */
       #shakeBtn {
-        width: 114px;
+        width: 134px;
       }
       /* The free-play Pack’em, enlarged to the big-button
          class (John's ruling, 2026-10-19): the same 22px
@@ -910,7 +910,7 @@
            can wrap to two rows with the tall Jump row, and the
            chips must clear it. */
         #shakeBtn {
-          width: 104px;
+          width: 112px;
           min-width: 0;
         }
         /* Pack’em steps down with JUMP at phone width, to a
@@ -942,7 +942,9 @@
           min-width: 0;
           min-height: 52px;
           height: 52px;
-          width: auto;
+          width: 130px;
+          justify-self: center;
+          margin-left: -8px;
         }
         #musicBtn, #bouncerBtn { min-width: 0; width: 104px; }
         /* The bar on a phone is the desktop bar's compact
@@ -982,10 +984,12 @@
            the desktop bar (John's word, 2026-10-20). */
         .toolbar {
           display: grid;
-          grid-template-columns: 104px 130px 104px;
+          grid-template-columns: 112px 142px 104px;
           grid-template-rows: 52px auto;
           justify-content: space-between;
           row-gap: 8px;
+          column-gap: 4px;
+          width: min(780px, calc(100vw - 8px));
         }
         #resetBtn { justify-self: start; }
         .gamehud { bottom: calc(147px + env(safe-area-inset-bottom)); }
@@ -1003,7 +1007,7 @@
       .toolbar:has(#resetBtn[hidden]) #shakeBtn {
         grid-row: 1;
         grid-column: 2;
-        width: 137px;
+        width: 160px;
         height: 68px;
         font-size: 18px;
         font-weight: 800;
@@ -1026,7 +1030,8 @@
       }
       @media (max-width: 480px) {
         .toolbar:has(#resetBtn[hidden]) #shakeBtn {
-          width: 130px;
+          width: 142px;
+          margin-left: -4px;
           height: 52px;
           font-size: 17.5px;
           padding: 16px 10px;
@@ -1036,6 +1041,7 @@
           height: auto;
           min-height: 0;
           padding: 10.5px 10px;
+          margin-left: 0;
         }
       }
     </style>
