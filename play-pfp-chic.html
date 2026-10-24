@@ -1537,6 +1537,8 @@
         // while its date is today or later (America/Detroit); once
         // the date passes it leaves the pool for good. Sports: 81
         // (Pistons 40, Red Wings 35, Lions 6). Concerts: 123.
+        // Booking folds append at the end (this deck: 208 dated,
+        // 309 total, after the 2026-10-24 Nov 13-15 fold).
         // ================================================================
         var DATED_EVENTS = [
           { name: "Lions vs Green Bay Packers", date: "2026-10-25", venue: "Ford Field", link: "https://www.detroitlions.com/schedule/" },
@@ -1742,7 +1744,15 @@
           { name: "Zeds Dead", date: "2026-11-28", venue: "Masonic Temple Theatre", link: "https://themasonic.com" },
           { name: "Lord Huron", date: "2026-12-05", venue: "Masonic Temple Theatre", link: "https://themasonic.com" },
           { name: "GRiZ", date: "2026-12-18", venue: "Masonic Temple Theatre", link: "https://www.axs.com/series/34681/grizmas-2026-tickets" },
-          { name: "GRiZ", date: "2026-12-19", venue: "Masonic Temple Theatre", link: "https://www.axs.com/series/34681/grizmas-2026-tickets" }
+          { name: "GRiZ", date: "2026-12-19", venue: "Masonic Temple Theatre", link: "https://www.axs.com/series/34681/grizmas-2026-tickets" },
+          // — Booking fold (2026-10-24, day-before-checkout
+          // trigger — Chic & Clean next-stay window
+          // Nov 13-15, 2026): verified dated events the
+          // general fold had not carried.
+          { name: "Paradise Theatre Big Band", date: "2026-11-13", venue: "Orchestra Hall", link: "https://www.dso.org" },
+          { name: "Mozart & Schumann's Romantic Rhenish", date: "2026-11-13", venue: "Orchestra Hall", link: "https://www.dso.org/events-and-tickets/events/26-27-fall/mozart-and-schumanns-romantic-rhenish" },
+          { name: "Mozart & Schumann's Romantic Rhenish", date: "2026-11-14", venue: "Orchestra Hall", link: "https://www.dso.org/events-and-tickets/events/26-27-fall/mozart-and-schumanns-romantic-rhenish" },
+          { name: "Mozart & Schumann's Romantic Rhenish", date: "2026-11-15", venue: "Orchestra Hall", link: "https://www.dso.org/events-and-tickets/events/26-27-fall/mozart-and-schumanns-romantic-rhenish" }
         ];
 
         // ---------- Deck eligibility ----------
