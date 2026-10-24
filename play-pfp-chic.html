@@ -711,6 +711,19 @@
         box-shadow: 0 6px 20px rgba(255, 190, 26, 0.55), 0 3px 10px rgba(0, 0, 0, 0.35);
       }
       .over-tier[hidden] { display: none; }
+      /* The promotion line, under the rank line and its gold
+         badge pill (John's line, 2026-10-24): "What to do in
+         the area while you're here." It shows whenever a
+         real rank was read for a scoring round (see
+         showRank), on the same rule the slot has always
+         run on. */
+      .over-status {
+        font-size: 15.5px;
+        font-weight: 700;
+        line-height: 1.35;
+        margin: 0 0 1px;
+      }
+      .over-status[hidden] { display: none; }
       /* Link-buttons: anchors that wear the plain button face
          — the family style The Last TBOT In's card links use. */
       a.btnlink {
@@ -1167,6 +1180,7 @@
         <p class="over-result" id="resultLine"></p>
         <p class="over-rank" id="rankLine" hidden></p>
         <p class="over-tier" id="tierLine" hidden></p>
+        <p class="over-status" id="statusLine" hidden></p>
         <p class="over-best" id="bestLine"></p>
 
         <div class="rate-box">
@@ -1226,6 +1240,7 @@
         var resultLine = document.getElementById("resultLine");
         var rankLine = document.getElementById("rankLine");
         var tierLine = document.getElementById("tierLine");
+        var statusLine = document.getElementById("statusLine");
         var bestLine = document.getElementById("bestLine");
         var eatsName = document.getElementById("eatsName");
         var eatsFacts = document.getElementById("eatsFacts");
@@ -5139,6 +5154,12 @@
           } else {
             tierLine.hidden = true;
           }
+          if (postedRound.itemsIn > 0) {
+            statusLine.hidden = false;
+            statusLine.textContent = "What to do in the area while you're here.";
+          } else {
+            statusLine.hidden = true;
+          }
           return r.ownFound;
         }
 
@@ -5174,6 +5195,7 @@
               rankLine.hidden = false;
               rankLine.textContent = "Score posted — the ranking couldn't be loaded just now.";
               tierLine.hidden = true;
+              statusLine.hidden = true;
             }
             // If reads landed but the row never appeared, the rank
             // on the card already counts the player's own play in —
@@ -5205,6 +5227,7 @@
             rankLine.hidden = false;
             rankLine.textContent = "Posting your score…";
             tierLine.hidden = true;
+              statusLine.hidden = true;
           }
           var body = new URLSearchParams();
           if (SCOREBOOK.entryName) body.append(SCOREBOOK.entryName, name);
@@ -5657,6 +5680,7 @@
           rankLine.classList.remove("note");
           rankLine.hidden = true;
           tierLine.hidden = true;
+          statusLine.hidden = true;
           // The personal best is tracked on this device and shown
           // on every card: "Your best: B".
           recordBest(finalIn, timeLeft);
