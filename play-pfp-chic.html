@@ -1085,17 +1085,25 @@
         border-radius: 12px;
         border: 0;
       }
+      /* BIGGER IN-ROUND JUMP (John's order, 2026-10-24):
+         Jump stretches to fill the bar's centre top to
+         bottom — the space under it is gone. The bar's
+         single row is set by its stretched columns, not by
+         Jump, so the bar's height does not move. */
       .toolbar.in-round #shakeBtn {
         grid-column: 2;
         justify-self: center;
-        align-self: center;
+        align-self: stretch;
         width: 160px;
-        height: 68px;
+        height: auto;
         font-size: 18px;
         font-weight: 800;
         letter-spacing: 0.01em;
         padding: 17px 10px;
         border-radius: 17px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       @media (max-width: 480px) {
         .toolbar:not(.in-round) #gameBtn { width: 118px !important; }
@@ -1107,7 +1115,7 @@
         }
         .toolbar.in-round #shakeBtn {
           width: 138px;
-          height: 56px;
+          height: auto;
           font-size: 16px;
           padding: 16px 6px;
         }
