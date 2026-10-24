@@ -199,6 +199,16 @@
         letter-spacing: 0.03em;
         color: var(--ink-soft);
       }
+      /* The management credit (John's order, 2026-10-24):
+         small print directly under the wordmark lockup,
+         subordinate to the name and the property line. */
+      .brand-managed {
+        margin-top: 5px;
+        font-size: clamp(10px, 2.6vw, 12px);
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        color: var(--ink-soft);
+      }
       @media (min-width: 900px) {
         .brand-logo { top: calc(26px + env(safe-area-inset-top)); }
       }
@@ -1160,6 +1170,7 @@
       <div class="brand-name">PEOPLE FINDING PLACES</div>
       <div class="brand-rule"></div>
       <div class="brand-prop" id="brandProp">at Chic &amp; Clean</div>
+      <div class="brand-managed">Managed by JBTP LLC</div>
     </div>
 
     <div class="toolbar">
