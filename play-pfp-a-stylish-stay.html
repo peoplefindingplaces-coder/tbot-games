@@ -968,16 +968,19 @@
          the stack, exactly as before. */
       .toolbar.in-round #shakeBtn {
         grid-column: 2;
-        grid-row: 1;
+        grid-row: 1 / 3;
         justify-self: center;
-        align-self: start;
+        align-self: stretch;
         width: 160px;
-        height: 68px;
+        height: auto;
         font-size: 18px;
         font-weight: 800;
         letter-spacing: 0.01em;
         padding: 10px;
         border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .toolbar.in-round #gameBtn {
         grid-column: 1;
@@ -992,10 +995,21 @@
         padding: 11px 10px;
         border-radius: 12px;
       }
+      /* BIGGER IN-ROUND JUMP (John's order, 2026-10-24):
+         Jump spans BOTH rows of the centre column and fills
+         them top to bottom — the empty space under it is
+         gone. The rows are pinned to the heights they
+         already had (68px desktop, 54px phone) so the bar's
+         height, and the floor that reads its top edge,
+         does not move. */
+      @media (min-width: 481px) {
+        .toolbar.in-round { grid-template-rows: 68px auto; }
+      }
       @media (max-width: 480px) {
+        .toolbar.in-round { grid-template-rows: 54px auto; }
         .toolbar.in-round #shakeBtn {
           width: 128px;
-          height: 54px;
+          height: auto;
           font-size: 15.5px;
           padding: 10px 6px;
           border-radius: 15px;
