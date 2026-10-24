@@ -657,6 +657,19 @@
         margin: 0 0 1px;
       }
       .over-badge[hidden] { display: none; }
+      /* The promotion line, under the rank line and its gold
+         badge pill (John's line, 2026-10-24): "What to do in
+         the area while you're here." It shows whenever a
+         real rank was read for a scoring round (see
+         showRank), on the same rule the slot has always
+         run on. */
+      .over-status {
+        font-size: 15.5px;
+        font-weight: 700;
+        line-height: 1.35;
+        margin: 0 0 1px;
+      }
+      .over-status[hidden] { display: none; }
       /* Link-buttons: anchors that wear the plain button face
          — the family style The Last TBOT In's card links use. */
       a.btnlink {
@@ -839,6 +852,7 @@
         .over-result { font-size: 20px; margin-bottom: 1px; }
         .over-rank { font-size: 23px; margin-bottom: 1px; }
         .over-badge { margin: 0 0 1px; padding: 2px 14px; }
+        .over-status { line-height: 1.25; margin-bottom: 1px; }
         .over-best { margin-bottom: 2px; }
         .rate-box { margin-bottom: 1px; }
         .rate-label { margin-bottom: 1px; }
@@ -1056,6 +1070,7 @@
         <p class="over-result" id="resultLine"></p>
         <p class="over-rank" id="rankLine" hidden></p>
         <p class="over-badge" id="badgeLine" hidden></p>
+        <p class="over-status" id="statusLine" hidden></p>
         <p class="over-best" id="bestLine"></p>
 
         <div class="rate-box">
@@ -1114,6 +1129,7 @@
         var resultLine = document.getElementById("resultLine");
         var rankLine = document.getElementById("rankLine");
         var badgeLine = document.getElementById("badgeLine");
+        var statusLine = document.getElementById("statusLine");
         var bestLine = document.getElementById("bestLine");
         var codeLabel = document.getElementById("codeLabel");
         var codeValue = document.getElementById("codeValue");
@@ -5424,10 +5440,14 @@
           return "";
         }
 
-        // Paint the rank line and the gold badge pill under
-        // it. (The prize display line that used to paint
-        // here was removed on 2026-10-24 at John's ruling
-        // — the prize is out of the games everywhere.)
+        // Paint the rank line, the gold badge pill under it,
+        // and the promotion line under the badge — John's line
+        // (2026-10-24): "What to do in the area while you're
+        // here." It stands in the slot the old prize line
+        // vacated the same day, on the slot's own rule: it
+        // shows whenever a real rank was read for a scoring
+        // round, and the badge only ever paints here, with a
+        // real rank.
         function showRank(scores) {
           var r = computeRank(scores);
           rankLine.classList.remove("note");
@@ -5441,6 +5461,12 @@
             badgeLine.textContent = badgeText;
           } else {
             badgeLine.hidden = true;
+          }
+          if (postedRound.itemsIn > 0) {
+            statusLine.hidden = false;
+            statusLine.textContent = "What to do in the area while you're here.";
+          } else {
+            statusLine.hidden = true;
           }
           return r.ownFound;
         }
@@ -5477,6 +5503,7 @@
               rankLine.hidden = false;
               rankLine.textContent = "Score posted — the ranking couldn't be loaded just now.";
               badgeLine.hidden = true;
+              statusLine.hidden = true;
             }
             // If reads landed but the row never appeared, the rank
             // on the card already counts the player's own play in —
@@ -5508,6 +5535,7 @@
             rankLine.hidden = false;
             rankLine.textContent = "Posting your score…";
             badgeLine.hidden = true;
+              statusLine.hidden = true;
           }
           var body = new URLSearchParams();
           if (SCOREBOOK.entryName) body.append(SCOREBOOK.entryName, name);
@@ -5938,6 +5966,7 @@
           rankLine.classList.remove("note");
           rankLine.hidden = true;
           badgeLine.hidden = true;
+          statusLine.hidden = true;
           eatsBox.hidden = true; // the eats pick is seated fresh by showEvent on a win — and never on a zero-in card
           lastEatsPick = null;
           // The personal best is tracked on this device and shown
