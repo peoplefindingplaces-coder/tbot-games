@@ -961,15 +961,19 @@
          still set by the 68px box (now Jump's) and row 2 by
          the stack, exactly as before. */
       .toolbar:has(#resetBtn[hidden]) #shakeBtn {
-        grid-row: 1;
+        grid-row: 1 / 3;
         grid-column: 2;
+        align-self: stretch;
         width: 160px;
-        height: 68px;
+        height: auto;
         font-size: 18px;
         font-weight: 800;
         letter-spacing: 0.01em;
         padding: 17px 12px;
         border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .toolbar:has(#resetBtn[hidden]) #gameBtn {
         grid-row: 2;
@@ -988,7 +992,7 @@
         .toolbar:has(#resetBtn[hidden]) #shakeBtn {
           width: 142px;
           margin-left: -4px;
-          height: 52px;
+          height: auto;
           font-size: 17.5px;
           padding: 16px 10px;
         }
@@ -998,6 +1002,18 @@
           min-height: 0;
           padding: 10.5px 10px;
           margin-left: 0;
+        }
+      }
+      /* BIGGER IN-ROUND JUMP (John's order, 2026-10-24):
+         Jump spans BOTH rows of the centre column and fills
+         them top to bottom — the empty space under it is
+         gone. The desktop rows are pinned to the heights
+         they already had so the bar's height, and the floor
+         that reads its top edge, does not move; the phone
+         tier's fixed 52px row already pins it there. */
+      @media (min-width: 481px) {
+        .toolbar:has(#resetBtn[hidden]) {
+          grid-template-rows: 68px auto;
         }
       }
     </style>
