@@ -108,6 +108,12 @@
         font-weight: 500;
         color: var(--ink-soft);
       }
+      .hint small#beatLabel {
+        color: var(--gold);
+        font-weight: 800;
+        font-size: 14.5px;
+        letter-spacing: 0.02em;
+      }
       /* The player-code line and its Restore row: the one
          interactive corner of the direction box. */
       .hint button, .hint input { pointer-events: auto; }
@@ -1052,6 +1058,7 @@
     <div class="hint" id="hint">
       Get them all in the hole
       <small id="hintSub">Hit Jump to bounce them into the hole in the middle of the room — the last one in picks your event.</small>
+      <small id="beatLabel" hidden></small>
       <small id="playsLabel" hidden></small>
       <small id="codeLabel" hidden>Player code: <strong id="codeValue"></strong> <button class="linkbtn" id="restoreToggle" type="button">Restore</button></small>
       <small id="restoreRow" hidden><input id="restoreInput" type="text" maxlength="8" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Your code" aria-label="Your player code" /><button class="linkbtn" id="restoreApply" type="button">Apply code</button> <span id="restoreMsg"></span></small>
@@ -1168,6 +1175,7 @@
         var rateThanks = document.getElementById("rateThanks");
         var starBtns = document.querySelectorAll(".star-btn");
         var playsLabel = document.getElementById("playsLabel");
+        var beatLabel = document.getElementById("beatLabel");
         var bgMusic = document.getElementById("bgMusic");
         var musicBtn = document.getElementById("musicBtn");
         var soundStack = document.getElementById("soundStack");
@@ -5606,6 +5614,27 @@
           if (scores && scores.length > 0) {
             playsLabel.textContent = scores.length + (scores.length === 1 ? " play" : " plays") + " so far";
             playsLabel.hidden = false;
+            showBeat(scores);
+          }
+        }
+
+        // The number to beat: the top of this home's own
+        // ranking — the best round in the book by the game's
+        // own law (most items in, then most time left), read
+        // live by the same warm read that counts the plays.
+        // Painted only when the book's best is a real score.
+        function showBeat(scores) {
+          var best = null;
+          for (var i = 0; i < scores.length; i++) {
+            var s = scores[i];
+            if (!best || s.itemsIn > best.itemsIn ||
+                (s.itemsIn === best.itemsIn && s.timeLeft > best.timeLeft)) {
+              best = s;
+            }
+          }
+          if (best && best.itemsIn > 0) {
+            beatLabel.textContent = "Number to beat: " + best.itemsIn + " in \u00b7 " + best.timeLeft + "s left on the clock";
+            beatLabel.hidden = false;
           }
         }
         var warmRunning = false;
