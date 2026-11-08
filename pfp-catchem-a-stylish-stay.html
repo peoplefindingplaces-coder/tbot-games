@@ -5544,6 +5544,7 @@ var EVENTS = [
         }
         function beginRound(filter) {
           if (packOn) return;
+          var pfpPk = document.getElementById("pfpPicker"); if (pfpPk) pfpPk.style.display = "none";
           // THE MODE PICKS THE POOL: "ALL" deals CATCH'EM —
           // the full 470-seat pool, whether a lobby state is
           // set or not, and nothing about the lobby can block
@@ -5604,6 +5605,7 @@ var EVENTS = [
         // Music). The device catch best stands.
         function exitPackMode() {
           if (!packOn && !packCardUp) return;
+          var pfpPk2 = document.getElementById("pfpPicker"); if (pfpPk2) pfpPk2.style.display = "";
           packOn = false;
           packCardUp = false;
           packPols = [];
