@@ -5631,8 +5631,14 @@ var EVENTS = [
           var kinds = window.__pfpItemKinds || ["keys"];
           var kind = kinds[Math.floor(Math.random() * kinds.length)];
           var meta = (window.__pfpItemMeta && window.__pfpItemMeta[kind]) || { label: "ITEM", aspect: 1 };
-          var h = clamp(H * 0.17, 88, 132);
+          // ITEM SIZE (John, Nov 8, 2026 — "the items are too
+          // large"): fallers fit a modest box — height about
+          // half the old measure, width capped at ~24% of the
+          // screen so no item is wider than the TNET mouth.
+          var h = clamp(H * 0.09, 46, 68);
           var w = h * meta.aspect;
+          var maxW = clamp(W * 0.24, 78, 104);
+          if (w > maxW) { w = maxW; h = w / meta.aspect; }
           packPols.push({
             fig: null, item: kind, entry: { seat: meta.label, name: "" },
             x: rand(46, Math.max(47, W - 46)),
