@@ -5917,8 +5917,7 @@ var EVENTS = [
               packPols.splice(i, 1);
               packPacked++;
               packLastCaught = { fig: null, item: p.item, entry: p.entry };
-              packFx.push({ fig: null, item: p.item, entry: p.entry, x: p.x, w: p.w, h: p.h, t: 0, dur: 0.6 });
-              playBubblePop();
+              packFx.push({ fig: null, item: p.item, entry: p.entry, x: p.x, y: p.y, w: p.w, h: p.h, netX: packNetX, t: 0, dur: 0.8, popped: false });
               haptic(HAPTIC_CATCH);
               floatQueue.push({ x: clamp(p.x, 110, Math.max(110, W - 110)), text: "CAUGHT! " + packPacked });
               if (floatQueue.length > 3) floatQueue.splice(0, floatQueue.length - 3);
@@ -5942,6 +5941,7 @@ var EVENTS = [
           // The pack-in effects at the bottom run out.
           for (var fi = packFx.length - 1; fi >= 0; fi--) {
             packFx[fi].t += dt;
+            if (!packFx[fi].popped && packFx[fi].t >= 0.3) { packFx[fi].popped = true; playBubblePop(); }
             if (packFx[fi].t >= packFx[fi].dur) packFx.splice(fi, 1);
           }
           for (var bi = packBreaks.length - 1; bi >= 0; bi--) {
@@ -6676,44 +6676,38 @@ function drawAvatarBasket(g, av, cx, baseY, u, mouthY, half) {
         // figure himself packs into the crate in front of
         // the TBOT holding the net.
         function drawPackFx(fx) {
-          var gy = groundY();
-          var k = clamp(fx.t / fx.dur, 0, 1);
-          var squash = 1 - 0.74 * k;
-          var fh = fx.h * squash;
-          var alpha = k > 0.72 ? 1 - (k - 0.72) / 0.28 : 1;
+          // PFP: a caught item LANDS IN THE BASKET (John,
+          // Nov 9, 2026 — "Let the item land in the
+          // basket"). This pass draws AFTER the basket and
+          // clips the item at the basket's front rim, so
+          // the item is seen dropping in, settling with
+          // its top riding above the front wall, then
+          // fading as the basket collects it. The item
+          // rides the basket if the catcher keeps moving.
+          var mouthY = packNetMouthY();
+          var cx = fx.x + (packNetX - (fx.netX != null ? fx.netX : fx.x));
+          var t = fx.t;
+          var dropK = clamp(t / 0.3, 0, 1);
+          var sink = fx.h * 0.62 * dropK * dropK;
+          if (t > 0.3 && t < 0.46) sink -= 2.2 * Math.sin((t - 0.3) / 0.16 * Math.PI);
+          var scale = 1 - 0.05 * dropK;
+          var w = fx.w * scale, h = fx.h * scale;
+          var cy = fx.y + sink + (fx.h - h) / 2;
+          var alpha = t > 0.52 ? Math.max(0, 1 - (t - 0.52) / 0.28) : 1;
+          var rimY = mouthY + fx.h * 0.34;
           ctx.save();
           ctx.globalAlpha = alpha;
-          // The figure, folding down toward the ground.
+          ctx.beginPath();
+          ctx.rect(0, 0, W, rimY);
+          ctx.clip();
           var fimg = window.__pfpItemImgs && window.__pfpItemImgs[fx.item];
           if (fimg && fimg.complete && fimg.naturalWidth > 0) {
-            ctx.drawImage(fimg, fx.x - fx.w / 2, gy - fh, fx.w, fh);
+            ctx.drawImage(fimg, cx - w / 2, cy - h / 2, w, h);
           } else {
             ctx.fillStyle = "#232b38";
-            ctx.fillRect(fx.x - fx.w * 0.34, gy - fh, fx.w * 0.68, fh);
-          }
-          // The crate he packs into, rising around his feet.
-          var cw = fx.w * 1.25;
-          var ch = fx.h * 0.34 * Math.min(1, k * 1.6);
-          ctx.fillStyle = "rgba(243, 239, 228, 0.95)";
-          ctx.fillRect(fx.x - cw / 2, gy - ch, cw, ch);
-          ctx.strokeStyle = "#a89a76";
-          ctx.lineWidth = 2;
-          ctx.strokeRect(fx.x - cw / 2, gy - ch, cw, ch);
-          ctx.beginPath();
-          ctx.moveTo(fx.x - cw / 2, gy - ch);
-          ctx.lineTo(fx.x + cw / 2, gy);
-          ctx.moveTo(fx.x + cw / 2, gy - ch);
-          ctx.lineTo(fx.x - cw / 2, gy);
-          ctx.stroke();
-          if (k > 0.35) {
-            ctx.font = "800 9px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif";
-            ctx.fillStyle = "#6b5b2f";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(fx.entry.seat, fx.x, gy - ch / 2);
+            ctx.fillRect(cx - w * 0.34, cy - h / 2, w * 0.68, h);
           }
           ctx.restore();
-          ctx.textBaseline = "alphabetic";
         }
         // One MISSED politician SINKING INTO THE MUD: he
         // stands where he landed outside the TNET and goes
@@ -7101,11 +7095,11 @@ function drawAvatarBasket(g, av, cx, baseY, u, mouthY, half) {
           drawPackCatcherBody(nowMs);
           if (packOn) {
             for (var i = 0; i < packPols.length; i++) drawPackPol(packPols[i], nowMs);
-            for (var j = 0; j < packFx.length; j++) drawPackFx(packFx[j]);
             for (var bj = 0; bj < packBreaks.length; bj++) drawPackBreak(packBreaks[bj]);
             for (var sj = 0; sj < packSinks.length; sj++) drawPackSink(packSinks[sj]);
           }
           drawPackCatcherBasket(nowMs);
+          if (packOn) { for (var j2 = 0; j2 < packFx.length; j2++) drawPackFx(packFx[j2]); }
           if (packOn) drawPackScore();
           if (floats.length) {
             ctx.save();
