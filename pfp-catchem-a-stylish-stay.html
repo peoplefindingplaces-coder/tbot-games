@@ -1067,7 +1067,7 @@
 .pfp-av-chip{width:52px;height:52px;border-radius:12px;border:2px solid rgba(11,16,38,.18);background:linear-gradient(#bcd7ee,#e9f2f9);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
 .pfp-av-chip.sel{border-color:#ffbe1a;box-shadow:0 0 0 2px #0b1026}
 </style>
-  <style>#packLastBlock { display: none !important; }</style>
+  <style>#packLastBlock, .pack-card-title, #packStateLine, #packYourStateLine, #packBeatLine, #packStateRankLine, #packNone { display: none !important; } .pack-card-counts { font-size: 21px; font-weight: 800; color: var(--ink); } .pack-rank { font-size: 23px; font-weight: 900; color: var(--ink); } .pack-badge { display: inline-block; background: #ffbe1a; color: #000000; font-size: 16px; font-weight: 900; line-height: 1.25; padding: 2px 14px; border: 3px solid #0b1026; border-radius: 999px; margin: 2px 0 4px; } .pack-badge[hidden] { display: none !important; } .pfp-promo { font-size: 15.5px; font-weight: 700; color: var(--ink); margin: 0 0 1px; } .pack-best { font-size: 13px; font-weight: 600; color: var(--ink-soft, #6b7280); margin: 0 0 2px; } .rate-box { margin: 0 0 1px; } .rate-label { font-size: 14px; font-weight: 700; margin: 0 0 1px; } .stars { display: flex; justify-content: center; gap: 2px; } button.star-btn { background: transparent; color: #6b7280; opacity: 0.45; font-size: 40px; line-height: 1; padding: 8px 7px; min-width: 52px; min-height: 52px; border-radius: 12px; } button.star-btn.filled { color: #ffbe1a; opacity: 1; } button.star-btn:disabled { cursor: default; } .rate-thanks { font-size: 14px; font-weight: 700; margin: 6px 0 0; } .rate-thanks[hidden] { display: none; } .pfp-mealrow { flex-direction: column; } .pack-card .pfp-viewhome { flex: none; width: 100%; margin: 0 0 2px; }</style>
 </head>
   <body>
     <canvas id="stage" aria-label="PFP - Catch’em at A Stylish Stay: stay items fall from the sky — slide your catcher and catch the items in the white basket."></canvas>
@@ -1118,7 +1118,7 @@
     <div class="overlay" id="packOverlay" hidden>
       <div class="over-card pack-card" role="dialog" aria-label="Catch'em results">
         <p class="pack-card-title">PFP - CATCH’EM</p>
-        <div class="pfp-eventblock">
+        <div class="pfp-eventblock" id="pfpEventBlock">
           <p class="pfp-lead">Here's something you can do while you're here.</p>
           <p class="pfp-event"><a id="pfpEventLink" href="#" target="_blank" rel="noopener"><span id="pfpEventName"></span></a></p>
         </div>
@@ -1126,9 +1126,21 @@
         <p class="pack-state" id="packStateLine">A Stylish Stay</p>
         <p class="pack-state" id="packYourStateLine" hidden></p>
         <p class="pack-rank" id="packRankLine" hidden></p>
+        <p class="pack-badge" id="packBadgeLine" hidden></p>
         <p class="pack-beat" id="packBeatLine" hidden></p>
-        <p class="pfp-promo">What to do in the area while you're here.</p>
+        <p class="pfp-promo" id="pfpPromoLine">What to do in the area while you're here.</p>
         <p class="pack-best" id="packBestLine" hidden></p>
+        <div class="rate-box">
+          <p class="rate-label">Rate this game:</p>
+          <div class="stars" role="group" aria-label="Rate this game from 1 to 5 stars">
+            <button class="star-btn" type="button" data-stars="1" aria-label="1 star">★</button>
+            <button class="star-btn" type="button" data-stars="2" aria-label="2 stars">★</button>
+            <button class="star-btn" type="button" data-stars="3" aria-label="3 stars">★</button>
+            <button class="star-btn" type="button" data-stars="4" aria-label="4 stars">★</button>
+            <button class="star-btn" type="button" data-stars="5" aria-label="5 stars">★</button>
+          </div>
+          <p class="rate-thanks" id="packRateThanks" hidden></p>
+        </div>
         <p class="pack-state-rank" id="packStateRankLine" hidden></p>
         <div id="packLastBlock">
           <p class="pack-last-label">LAST ITEM CAUGHT</p>
@@ -1139,16 +1151,16 @@
         <p class="over-show" id="showLine" hidden><span class="show-name" id="showName"></span><a class="show-meta" id="showMeta" href="#" target="_blank" rel="noopener" hidden></a></p>
         
         <div class="pfp-mealrow">
+          <a class="pfp-viewhome" id="pfpViewHome" href="https://www.airbnb.com/rooms/1450360362429561606" target="_blank" rel="noopener">View our home</a>
           <div class="pfp-eats">
             <p class="pfp-eats-lead">GOOD EATS NEARBY</p>
             <p class="pfp-eats-name"><a id="pfpEatsLink" href="#" target="_blank" rel="noopener"><span id="pfpEatsName"></span></a></p>
             <p class="pfp-eats-sub" id="pfpEatsSub"></p>
           </div>
-          <a class="pfp-viewhome" id="pfpViewHome" href="https://www.airbnb.com/rooms/1450360362429561606" target="_blank" rel="noopener">View our home</a>
         </div>
         <div class="over-btns">
-          <button id="packAgainBtn" type="button">Catch again</button>
-          <button class="primary" id="packCatchBtn" type="button">Lobby</button>
+          <button id="packCatchBtn" type="button">Catch’em</button>
+          <button class="primary" id="packAgainBtn" type="button">Play again</button>
         </div>
       </div>
     </div>
@@ -4324,7 +4336,7 @@ var EVENTS = [
         var catchBest = readCatchBest("ALL"); // the CATCH'EM (all-states) best
         function paintCatchBest() {
           if (catchBestLineEl) catchBestLineEl.textContent = "Your best: " + readCatchBest("ALL") + " caught";
-          if (packBestLineEl) packBestLineEl.textContent = "Your best: " + readCatchBest("ALL") + " caught";
+          if (packBestLineEl) packBestLineEl.textContent = "Your best: " + readCatchBest("ALL");
         }
 
         // ---------- The lobby state: YOUR STATE ----------
@@ -4683,6 +4695,8 @@ var EVENTS = [
         // the WashingBot book or any Pack'em book in here.
         // ================================================================
         var SCORE_POST_URL = "https://docs.google.com/forms/d/e/1FAIpQLSep3AvcRMb1pAp0vpUvpW3z7wy5-_XFQ46R8TmE_DMd7-sQOA/formResponse";
+        var SCORE_NAME_ENTRY = "entry.1532114651";
+        var SCORE_STARS_ENTRY = "entry.132708527";
         var SCORE_READ_URL = "https://docs.google.com/spreadsheets/d/120pkSAdTWGcWZc8EiUc7SDrWdBpEI9h-6mG82ETCwC4/gviz/tq?tqx=out:json&sheet=Form%20Responses%201";
         var SCORE_CSV_URL = "https://docs.google.com/spreadsheets/d/120pkSAdTWGcWZc8EiUc7SDrWdBpEI9h-6mG82ETCwC4/gviz/tq?tqx=out:csv&sheet=Form%20Responses%201";
         var postedCatchRound = null; // snapshot actually sent, name included
@@ -4907,6 +4921,7 @@ var EVENTS = [
             packRankLineEl.classList.add("note");
             packRankLineEl.hidden = false;
             packRankLineEl.textContent = "Posting your score…";
+            if (packBadgeLineEl) packBadgeLineEl.hidden = true;
           }
           if (packStateRankLineEl) {
             if (stateAtPost) paintStateRankNote("Posting your " + (STATE_NAMES[stateAtPost] || stateAtPost) + " rank…");
@@ -5016,7 +5031,12 @@ var EVENTS = [
           if (packRankLineEl) {
             packRankLineEl.classList.remove("note");
             packRankLineEl.hidden = false;
-            packRankLineEl.textContent = "You rank #" + rank + " of " + tags + " players · Caught " + myStanding.caught + " · Missed " + myStanding.missed;
+            packRankLineEl.textContent = rank === 1 ? "You rank #1 of " + tags + (tags === 1 ? " player" : " players") + " — top of the board!" : "You rank #" + rank + " of " + tags + " players";
+            if (packBadgeLineEl) {
+              var badgeText = catchBadgeTextForRank(rank);
+              if (badgeText && mine.caught > 0) { packBadgeLineEl.hidden = false; packBadgeLineEl.textContent = badgeText; }
+              else packBadgeLineEl.hidden = true;
+            }
           }
           // THE STATE RANK, from the same book read: where
           // the player stands among the players whose
@@ -5098,6 +5118,7 @@ var EVENTS = [
                 packRankLineEl.classList.add("note");
                 packRankLineEl.hidden = false;
                 packRankLineEl.textContent = "Score posted — the ranking couldn't be loaded just now.";
+              if (packBadgeLineEl) packBadgeLineEl.hidden = true;
               }
               if (mine.state) paintStateRankNote("Your " + (STATE_NAMES[mine.state] || mine.state) + " ranking couldn't be loaded just now.");
               if (performance.now() - rankPostStamp < 120000) {
@@ -5303,15 +5324,13 @@ var EVENTS = [
         // start from the player's tap is still in flight — it
         // can never again read "on" over silence.
         var MUSIC_SRC = window.__pfpMusicSrc || "";
-        var MUSIC_TRACKS = (window.__pfpTracks && window.__pfpTracks.length) ? window.__pfpTracks : [MUSIC_SRC];
-        var musicTrackIdx = MUSIC_TRACKS.indexOf(MUSIC_SRC); if (musicTrackIdx < 0) musicTrackIdx = 0;
         var MUSIC_LEVEL = 0.3; // the locked music level for this game
         var musicWanted = true;
         var musicPlaying = false; // a buffer source is live AND the context is running — the true state
         var musicStarted = false; // a start has actually sounded
         var musicArmed = false; // a start was asked for from a player's own tap (CATCH'EM, PLAY MY STATE, Catch again, the Music switch)
         var musicStartPending = false; // a start from a tap is in flight (clip decoding, or the context still resuming)
-        var musicBuffer = null; // the decoded clip for the current playlist track — decoded from the embedded base64, then reused by every start of that track
+        var musicBuffer = null; // the decoded clip — decoded once from the embedded base64, then reused by every start
         var musicBufferRequested = false;
         var musicBufferWaiters = [];
         var musicSource = null; // the live AudioBufferSourceNode, when one is rolling
@@ -5374,8 +5393,7 @@ var EVENTS = [
         // request flag (see finish) so the player's next tap
         // retries the decode — no silent one-shot failure.
         function musicClipBytes() {
-          var musicUri = MUSIC_TRACKS[musicTrackIdx] || MUSIC_SRC;
-          var b64 = musicUri.slice(musicUri.indexOf(",") + 1);
+          var b64 = MUSIC_SRC.slice(MUSIC_SRC.indexOf(",") + 1);
           var bin = atob(b64);
           var len = bin.length;
           var bytes = new Uint8Array(len);
@@ -5419,38 +5437,16 @@ var EVENTS = [
           stopMusicSource(); // never two sources rolling at once
           var src = popCtx.createBufferSource();
           src.buffer = musicBuffer;
-          src.loop = false; // playlist: when this song ends, the next one starts
+          src.loop = true; // one song per visit, end to end, around again — the playlist seat rotates the song on the next return
           src.connect(musicGain);
           src.onended = function () {
             if (musicSource === src) { musicSource = null; syncMusicState(); }
-            advanceMusicTrack();
           };
           musicSource = src;
           try { src.start(0); } catch (e) { if (musicSource === src) musicSource = null; }
           syncMusicState();
         }
-                // Playlist advance: a song that ends on its own hands over
-        // to the next track on the shared list, so the music keeps
-        // changing while the player stays. A stop from the Music
-        // switch never reaches here — stopMusicSource clears the
-        // ended handler before stopping — and neither does a
-        // toggle-off (musicWanted is false by then).
-        function advanceMusicTrack() {
-          if (!musicWanted || !musicArmed) return;
-          if (MUSIC_TRACKS.length < 2) { startMusicSource(); return; }
-          musicTrackIdx = (musicTrackIdx + 1) % MUSIC_TRACKS.length;
-          musicBuffer = null;
-          musicBufferRequested = false;
-          musicStartPending = true;
-          setMusicLabel();
-          loadMusicBuffer(function (ok) {
-            musicStartPending = false;
-            if (!ok) { setMusicLabel(); return; }
-            if (!musicWanted) { setMusicLabel(); return; }
-            startMusicSource();
-          });
-        }
-        function tryStartMusic() {
+                function tryStartMusic() {
           if (!musicWanted) return;
           musicArmed = true;
           // Inside the player's tap: prime the game's own
@@ -5660,6 +5656,63 @@ var EVENTS = [
         // seat label (or the plain nobody-caught line), and
         // the month-matched show plate dealt fresh as the
         // card opens. The card fits one phone screen.
+                var packBadgeLineEl = document.getElementById("packBadgeLine");
+        // The badge ladder — Jill's words, keyed to the rank on
+        // the card (the same ladder Play PFP wears). Past #100
+        // there is no badge.
+        function catchBadgeTextForRank(rank) {
+          if (rank <= 5) return "Top 5 — Untouchable";
+          if (rank <= 10) return "Top 10 — The Best";
+          if (rank <= 20) return "Top 20 — You are Amazing";
+          if (rank <= 30) return "Top 30 — You are Awesome";
+          if (rank <= 50) return "Top 50 — Pretty Good";
+          if (rank <= 75) return "Top 75 — You're OK";
+          if (rank <= 100) return "Top 100 — You got some work to do";
+          return "";
+        }
+
+        // Rate this game: one tap per card locks the rating,
+        // paints the stars gold and posts the rating as its own
+        // row (Guest-<tag> + Stars) — the scorebook reader skips
+        // rows with no Caught, so ratings never touch the ranks.
+        var packRating = 0;
+        var packStarBtns = document.querySelectorAll(".pack-card .star-btn");
+        var packRateThanksEl = document.getElementById("packRateThanks");
+        function paintPackStars() {
+          for (var i = 0; i < packStarBtns.length; i++) {
+            var n = Number(packStarBtns[i].getAttribute("data-stars"));
+            packStarBtns[i].classList.toggle("filled", n <= packRating);
+            packStarBtns[i].disabled = packRating > 0;
+          }
+        }
+        function resetPackRating() {
+          packRating = 0;
+          if (packRateThanksEl) { packRateThanksEl.hidden = true; packRateThanksEl.textContent = ""; }
+          paintPackStars();
+        }
+        function rateCatchGame(n) {
+          if (packRating > 0) return; // one tap locks this card's rating
+          packRating = n;
+          paintPackStars();
+          if (packRateThanksEl) {
+            packRateThanksEl.textContent = "Thanks! You rated " + n + (n === 1 ? " star." : " stars.");
+            packRateThanksEl.hidden = false;
+          }
+          if (!SCORE_POST_URL || !SCORE_STARS_ENTRY) return;
+          var body = new URLSearchParams();
+          body.append(SCORE_NAME_ENTRY, "Guest-" + getDeviceTag());
+          body.append(SCORE_STARS_ENTRY, String(n));
+          try {
+            fetch(SCORE_POST_URL, { method: "POST", mode: "no-cors", body: body })
+              .catch(function () { /* silent — the card never waits on the scorebook */ });
+          } catch (e) { /* silent, same as the score posting */ }
+        }
+        for (var sbi = 0; sbi < packStarBtns.length; sbi++) {
+          (function (btn) {
+            btn.addEventListener("click", function () { rateCatchGame(Number(btn.getAttribute("data-stars"))); });
+          })(packStarBtns[sbi]);
+        }
+
         function showPackCard() {
           if (!packOn) return;
           packOn = false;
@@ -5670,7 +5723,7 @@ var EVENTS = [
           packTargetX = null;
           packMoveDir = 0;
           toolbarEl.classList.remove("packmode");
-          packCountsEl.textContent = "CAUGHT " + packPacked + " · MISSED " + packMissed;
+          packCountsEl.textContent = packPacked > 0 ? "You got " + packPacked + " in · " + Math.max(0, Math.ceil(packTimeLeft)) + "s left on the clock" : "Nothing caught this time — the basket came up empty.";
           // THE CARD REMEMBERS ITS MODE (roundMode): an
           // all-states card frames "All states" with the
           // player's own "My state:" line under it, exactly
@@ -5691,7 +5744,7 @@ var EVENTS = [
             // key only — the ALL best is never touched here.
             if (packPacked > readCatchBest(roundMode)) { catchBests[roundMode] = packPacked; saveCatchBest(roundMode); }
             if (packBestLineEl) {
-              packBestLineEl.textContent = "Your best (" + (STATE_NAMES[roundMode] || roundMode) + "): " + readCatchBest(roundMode) + " caught";
+              packBestLineEl.textContent = "Your best (" + (STATE_NAMES[roundMode] || roundMode) + "): " + readCatchBest(roundMode);
               packBestLineEl.hidden = false;
             }
             // STATE ROUNDS STAY OUT OF THE SCOREBOOK: the
@@ -5749,6 +5802,9 @@ var EVENTS = [
             packNoneEl.hidden = false;
           }
           if (window.pfpPaintCard) window.pfpPaintCard();
+          var pfpEb = document.getElementById("pfpEventBlock"); if (pfpEb) pfpEb.style.display = packPacked === 0 ? "none" : "";
+          var pfpPr = document.getElementById("pfpPromoLine"); if (pfpPr) pfpPr.style.display = packPacked === 0 ? "none" : "";
+          resetPackRating();
           packOverlay.hidden = false;
         }
 
